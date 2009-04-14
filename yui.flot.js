@@ -345,6 +345,9 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 		}
 
 		function parseOptions(o) {
+			if (options.grid.borderColor == null)
+				options.grid.borderColor = options.grid.color
+
 			if(typeof o === 'undefined') {
 				return;
 			}
@@ -1263,10 +1266,10 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 
 		function drawSeriesLines(series) {
 			function plotLine(data, xoffset, yoffset, axisx, axisy) {
-				var prev = null, cur=null;
+				var prev = null, cur=null, drawx = null, drawy = null;
 
 				ctx.beginPath();
-				for (var i = 0; i < points.length; i++) {
+				for (var i = 0; i < data.length; i++) {
 					prev = cur;
 					cur = data[i];
 
@@ -1333,9 +1336,11 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 						x2 = axisx.max;
 					}
 
-					if (x1 != prev.x || y1 != prev.y)
+					if (drawx != axisx.p2c(x1) + xoffset || drawy != axisy.p2c(y1) + yoffset)
 						ctx.moveTo(axisx.p2c(x1) + xoffset, axisy.p2c(y1) + yoffset);
 
+					drawx = axisx.p2c(x2) + xoffset;
+					drawy = axisy.p2c(y2) + yoffset;
 					ctx.lineTo(axisx.p2c(x2) + xoffset, axisy.p2c(y2) + yoffset);
 				}
 				ctx.stroke();
@@ -1511,7 +1516,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 
 		function drawSeriesPoints(series) {
 			function plotPoints(data, radius, fillStyle, offset, circumference, axisx, axisy) {
-				for (var i = 0; i < points.length; i++) {
+				for (var i = 0; i < data.length; i++) {
 					if (data[i] == null || series.dropped[i])
 						continue;
 
