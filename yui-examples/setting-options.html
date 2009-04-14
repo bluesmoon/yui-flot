@@ -24,7 +24,7 @@
     feedback.</p>
 
 <script id="source" language="javascript" type="text/javascript">
-$(function () {
+(function () {
     var d1 = [];
     for (var i = 0; i < Math.PI * 2; i += 0.25)
         d1.push([i, Math.sin(i)]);
@@ -37,7 +37,7 @@ $(function () {
     for (var i = 0; i < Math.PI * 2; i += 0.1)
         d3.push([i, Math.tan(i)]);
     
-    $.plot($("#placeholder"), [
+    YAHOO.widget.Flot("placeholder", [
         { label: "sin(x)",  data: d1},
         { label: "cos(x)",  data: d2},
         { label: "tan(x)",  data: d3}
@@ -56,7 +56,7 @@ $(function () {
             backgroundColor: { colors: ["#fff", "#eee"] }
         }
     });
-});
+})();
 </script>
 
  </body>
