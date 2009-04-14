@@ -18,7 +18,7 @@
     series.</p>
 
 <script id="source" language="javascript" type="text/javascript">
-$(function () {
+(function () {
     var d1 = [];
     for (var i = 0; i < 14; i += 0.5)
         d1.push([i, Math.sin(i)]);
@@ -41,7 +41,7 @@ $(function () {
     for (var i = 0; i < 14; i += 0.5 + Math.random())
         d6.push([i, Math.sqrt(2*i + Math.sin(i) + 5)]);
                         
-    $.plot($("#placeholder"), [
+    YAHOO.widget.Flot("placeholder", [
         {
             data: d1,
             lines: { show: true, fill: true }
@@ -68,7 +68,7 @@ $(function () {
             lines: { show: true, steps: true }
         }
     ]);
-});
+})();
 </script>
 
  </body>
