@@ -1,8 +1,18 @@
-/* Javascript plotting library for jQuery, v. 0.5.
- *
- * Released under the MIT license by IOLA, December 2007.
- *
- */
+/**
+\file yui.flot.js
+\brief Javascript plotting library for YUI based on Flot v. 0.5.
+\details
+This file contains a port of Flot for YUI
+
+Copyright (c) 2009 Yahoo! Inc.  All rights reserved.  The copyrights embodied
+in the content of this file are licenced by Yahoo! Inc. under the BSD (revised)
+open source license.
+
+Requires yahoo-dom-event and datasource which you can get here:
+<script type="text/javascript" src="http://yui.yahooapis.com/combo?2.7.0/build/yahoo-dom-event/yahoo-dom-event.js&2.7.0/build/datasource/datasource.js"></script>
+
+Datasource is optional, you only need it if one of your axes has its mode set to "time"
+*/
 
 (function($) {
 	function Plot(target_, data_, options_) {
