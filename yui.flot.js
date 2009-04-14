@@ -9,7 +9,7 @@ in the content of this file are licenced by Yahoo! Inc. under the BSD (revised)
 open source license.
 
 Requires yahoo-dom-event and datasource which you can get here:
-<script type="text/javascript" src="http://yui.yahooapis.com/combo?2.7.0/build/yahoo-dom-event/yahoo-dom-event.js&2.7.0/build/datasource/datasource.js"></script>
+<script type="text/javascript" src="http://yui.yahooapis.com/combo?2.7.0/build/yahoo-dom-event/yahoo-dom-event.js&2.7.0/build/datasource/datasource-min.js"></script>
 
 Datasource is optional, you only need it if one of your axes has its mode set to "time"
 */
