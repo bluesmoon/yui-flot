@@ -1064,6 +1064,9 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 			else if (ranges[secondaryAxis]) {
 				axis = secondaryAxis;
 			}
+			else {
+				return { from: null, to: null, axis: axes[firstAxis] };
+			}
 
 			from = ranges[axis].from;
 			to = ranges[axis].to;
@@ -1101,8 +1104,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 			var markings = options.grid.markings;
 			if (markings) {
 				if (L.isFunction(markings))
-					// xmin etc. are backwards-compatible, to be removed in future
-					markings = markings({ xmin: axes.xaxis.min, xmax: axes.xaxis.max, ymin: axes.yaxis.min, ymax: axes.yaxis.max, xaxis: axes.xaxis, yaxis: axes.yaxis, x2axis: axes.x2axis, y2axis: axes.y2axis });
+					markings = markings({ xaxis: axes.xaxis, yaxis: axes.yaxis, x2axis: axes.x2axis, y2axis: axes.y2axis });
 
 				for (i = 0; i < markings.length; ++i) {
 					var m = markings[i],
