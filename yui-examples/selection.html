@@ -37,7 +37,7 @@
     <p><input id="zoom" type="checkbox">Zoom to selection.</input></p>
 
 <script id="source" language="javascript" type="text/javascript">
-$(function () {
+(function () {
     var data = [
         {
             label: "United States",
@@ -78,33 +78,39 @@ $(function () {
         selection: { mode: "x" }
     };
 
-    var placeholder = $("#placeholder");
+    var options = {
+        lines: { show: true },
+        points: { show: true },
+        legend: { noColumns: 2 },
+        xaxis: { tickDecimals: 0 },
+        yaxis: { min: 0 },
+        selection: { mode: "x" }
+    };
 
-    placeholder.bind("plotselected", function (event, ranges) {
-        $("#selection").text(ranges.xaxis.from.toFixed(1) + " to " + ranges.xaxis.to.toFixed(1));
+    var placeholder = YAHOO.util.Dom.get("placeholder");
 
-        var zoom = $("#zoom").attr("checked");
-        if (zoom)
-            plot = $.plot(placeholder, data,
-                          $.extend(true, {}, options, {
-                              xaxis: { min: ranges.xaxis.from, max: ranges.xaxis.to }
+    var plot = YAHOO.widget.Flot(placeholder, data, options);
+
+    function selectplot( area ) {
+        var zoom = YAHOO.util.Dom.get("zoom").checked;
+        YAHOO.util.Dom.get('selection').innerHTML = area.xaxis.from.toFixed( 1 ) + ' to ' + area.xaxis.to.toFixed( 1 );
+
+        if (zoom) {
+            plot = YAHOO.widget.Flot(placeholder, data,
+                          YAHOO.lang.merge(options, {
+                              xaxis: { min: area.xaxis.from, max: area.xaxis.to, tickDecimals: 0 }
                           }));
-    });
+           plot.subscribe( 'plotselected', selectplot);
+           plot.subscribe("plotunselected", function () { YAHOO.util.Dom.get("selection").innerHTML = ""; });
+        }
+    }
 
-    placeholder.bind("plotunselected", function (event) {
-        $("#selection").text("");
-    });
-    
-    var plot = $.plot(placeholder, data, options);
+    plot.subscribe( 'plotselected', selectplot);
+    plot.subscribe("plotunselected", function () { YAHOO.util.Dom.get("selection").innerHTML = ""; });
 
-    $("#clearSelection").click(function () {
-        plot.clearSelection();
-    });
-
-    $("#setSelection").click(function () {
-        plot.setSelection({ x1: 1994, x2: 1995 });
-    });
-});
+    YAHOO.util.Event.on('clearSelection', 'click', function() { plot.clearSelection(); } );
+    YAHOO.util.Event.on('setSelection', 'click', function() { plot.setSelection( { xaxis: { from: 1994, to: 1995 } } ); } );
+})();
 </script>
 
  </body>
