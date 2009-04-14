@@ -1798,6 +1798,8 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 					maxx = maxDistance / axisx.scale,
 					maxy = maxDistance / axisy.scale;
 
+				var data = s.data;
+
 				if (s.lines.show || s.points.show) {
 					for (j = 0; j < data.length; j++ ) {
 						if (data[j] == null)
@@ -1840,7 +1842,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 				}
 			}
 
-			return null;
+			return item;
 		}
 
 		function onMouseMove(e) {
@@ -1917,7 +1919,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 
 			for(var axis in axes)
 				if(axes[axis].used)
-					pos[axis.replace(/xis$/, '')] = axes[axis].c2p(axis.charAt(0) == 'x' ? canvasX :  canvasY);
+					pos[axis.replace(/axis$/, '')] = axes[axis].c2p(axis.charAt(0) == 'x' ? canvasX :  canvasY);
 
 			var item = findNearbyItem(canvasX, canvasY);
 
