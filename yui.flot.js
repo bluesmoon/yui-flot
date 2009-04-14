@@ -1925,8 +1925,8 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 
 			if (item) {
 				// fill in mouse pos for any listeners out there
-				item.pageX = parseInt(item.series.xaxis.p2c(item.datapoint[0]) + offset[0] + plotOffset.left);
-				item.pageY = parseInt(item.series.yaxis.p2c(item.datapoint[1]) + offset[1] + plotOffset.top);
+				item.pageX = parseInt(item.series.xaxis.p2c(item.datapoint.x) + offset[0] + plotOffset.left);
+				item.pageY = parseInt(item.series.yaxis.p2c(item.datapoint.y) + offset[1] + plotOffset.top);
 			}
 
 			if (options.grid.autoHighlight) {
