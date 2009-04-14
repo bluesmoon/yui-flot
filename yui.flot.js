@@ -1747,7 +1747,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 							tmp = extractColor(legend);
 						c = parseColor(tmp).adjust(null, null, null, 1).toString();
 					}
-					var div = legend.children();
+					var div = legend.firstChild;
 					var _el = DOM.insertBefore(
 								DOM.createElementFromMarkup('<div style="position:absolute;width:' + parseInt(DOM.getStyle(div, 'width'), 10)
 											+ 'px;height:' + parseInt(DOM.getStyle(div, 'height'), 10) + 'px;'
