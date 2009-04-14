@@ -2049,7 +2049,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 		}
 
 		function drawPointHighlight(series, point) {
-			var x = point[0], y = point[1],
+			var x = point.x, y = point.y,
 				axisx = series.xaxis, axisy = series.yaxis;
 
 			if (x < axisx.min || x > axisx.max || y < axisy.min || y > axisy.max)
