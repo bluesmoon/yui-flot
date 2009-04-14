@@ -14,7 +14,27 @@ Requires yahoo-dom-event and datasource which you can get here:
 Datasource is optional, you only need it if one of your axes has its mode set to "time"
 */
 
-(function($) {
+(function() {
+	var L = YAHOO.lang;
+	var UA = YAHOO.env.ua;
+	var DOM = YAHOO.util.Dom;
+	var E = YAHOO.util.Event;
+
+	if(!DOM.createElementFromMarkup) {
+		DOM.createElementFromMarkup = function(markup) {
+			var p=document.createElement('div');
+			p.innerHTML = markup;
+			var e = p.firstChild;
+			return p.removeChild(e);
+		};
+	}
+
+	if(!DOM.removeElement) {
+		DOM.removeElement = function(el) {
+			return el.parentNode.removeChild(el);
+		};
+	}
+
 	function Plot(target_, data_, options_) {
 		// data is on the form:
 		//   [ series1, series2 ... ]
@@ -25,6 +45,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 			options = {
 				// the color theme used for graphs
 				colors: ["#edc240", "#afd8f8", "#cb4b4b", "#4da74d", "#9440ed"],
+				locale: "en",
 				legend: {
 					show: true,
 					noColumns: 1, // number of colums in legend table
@@ -43,23 +64,28 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 					autoscaleMargin: null, // margin in % to add if auto-setting min/max
 					ticks: null, // either [1, 3] or [[1, "a"], 3] or (fn: axis info -> ticks) or app. number of ticks for auto-ticks
 					tickFormatter: null, // fn: number -> string
+					label: null,
 					labelWidth: null, // size of tick labels in pixels
 					labelHeight: null,
+
+					scaletype: 'linear',	// may be 'linear' or 'log'
 
 					// mode specific options
 					tickDecimals: null, // no. of decimals, null means auto
 					tickSize: null, // number or [number, "unit"]
 					minTickSize: null, // number or [number, "unit"]
-					monthNames: null, // list of names of months
 					timeformat: null // format string to use
 				},
 				yaxis: {
+					label: null,
 					autoscaleMargin: 0.02
 				},
 				x2axis: {
+					label: null,
 					autoscaleMargin: null
 				},
 				y2axis: {
+					label: null,
 					autoscaleMargin: 0.02
 				},			  
 				points: {
@@ -74,8 +100,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 					// whether lines were actively disabled 
 					lineWidth: 2, // in pixels
 					fill: false,
-					fillColor: null,
-					steps: false
+					fillColor: null
 				},
 				bars: {
 					show: false,
@@ -83,15 +108,15 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 					barWidth: 1, // in units of the x axis
 					fill: true,
 					fillColor: null,
-					align: "left", // or "center" 
-					horizontal: false // when horizontal, left is now top
+					align: "left" // or "center" 
 				},
-				threshold: null, // or { below: number, color: color spec}
 				grid: {
+					showLines: true,
 					color: "#545454", // primary color used for outline and labels
 					backgroundColor: null, // null for transparent, else color
 					tickColor: "#dddddd", // color used for the ticks
 					labelMargin: 5, // in pixels
+					labelFontSize: 16,
 					borderWidth: 2, // in pixels
 					borderColor: null, // set if different from the grid color
 					markings: null, // array of ranges or fn: axes -> array of ranges
@@ -117,7 +142,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 		overlay = null,	 // canvas for interactive stuff on top of plot
 		eventHolder = null, // jQuery object that events should be bound to
 		ctx = null, octx = null,
-		target = $(target_),
+		target = DOM.get(target_),
 		axes = { xaxis: {}, yaxis: {}, x2axis: {}, y2axis: {} },
 		plotOffset = { left: 0, right: 0, top: 0, bottom: 0},
 		canvasWidth = 0, canvasHeight = 0,
@@ -146,6 +171,15 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 		setupGrid();
 		draw();
 
+		var plot = this;
+
+		plot.createEvent('plotclick');
+		plot.createEvent('plothover');
+		plot.createEvent('plotselecting');
+		plot.createEvent('plotselected');
+		plot.createEvent('plotunselected');
+
+
 
 		function setData(d) {
 			series = parseData(d);
@@ -154,37 +188,174 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 			processData();
 		}
 
-		function parseData(d) {
+		function normalizeData(d) {
+			var possible_controls = ['x', 'time', 'date'];
+
+			if (L.isArray(d)) {
+				d = { data: d };
+			}
+
+			if(d.disabled) {
+				return undefined;
+			}
+
+			if (d.data.length === 0) {
+				return undefined;
+			}
+
+			var j, k;
+
+			if (L.isArray(d.data[0])) {
+				for(j=0; j<d.data.length; j++) {
+					if(d.data[j]) {
+						var x = d.data[j][0];
+						var y = d.data[j][1];
+
+						if(L.isObject(x) && x.getTime) x = x.getTime()/1000;
+						else x = parseFloat(x);
+
+						if(L.isObject(y) && y.getTime) y = y.getTime()/1000;
+						else y = parseFloat(y);
+
+						d.data[j] = { x: x, y: y};
+					}
+				}
+				d.control='x';
+				d.schema='y';
+			} else {
+				for(j=0; j<d.data.length; j++) {
+					for(k in d.data[j]) {
+						if(L.isObject(d.data[j][k]) && d.data[j][k].getTime) d.data[j][k] = d.data[j][k].getTime()/1000;
+						else d.data[j][k] = parseFloat(d.data[j][k]);
+					}
+				}
+			}
+
+			if (!d.control) {
+				// try to guess the control field
+				for (j=0; j<possible_controls.length; j++) {
+					if(possible_controls[j] in d.data[0]) {
+						d.control = possible_controls[j];
+						break;
+					}
+				}
+			}
+
+			if (!d.schema) {
+				d.schema = [];
+				for(k in d.data[0]) {
+					if(!d.control) {
+						d.control = k;
+					}
+					if(k !== d.control) {
+						d.schema.push(k);
+					}
+				}
+			}
+
+			return L.merge(d, {dropped: []});
+		}
+
+		function markDroppedPoints(s) {
+			var l=s.data.length;
+
+			if(l <= canvasWidth/10) {	// at least 10px per point
+				return s;
+			}
+
+			var dropperiod = 1-canvasWidth/10/l;
+			var drops = 0;
+			var points = l;
+
+			for(var j=0; j<l; j++) {
+				var x = s.data[j].x;
+				var y = s.data[j].y;
+
+				s.dropped[j] = (drops > 1);
+				if(s.dropped[j]) {
+					drops-=1;
+				}
+
+				if(!isNaN(x) && !isNaN(x))
+					drops+=dropperiod;
+				else {
+					drops=0;	// bonus for a null point
+					points--; 
+					dropperiod=1-canvasWidth/10/points;
+				}
+			}
+
+			return s;
+		}
+
+		function splitSeries(s) {
 			var res = [];
-			for (var i = 0; i < d.length; ++i) {
-				var s;
-				if (d[i].data) {
-					s = {};
-					for (var v in d[i])
-						s[v] = d[i][v];
+
+			for(var k=0; k<s.schema.length; k++) {
+				res[k] = L.merge(s, {data: []});
+				if(s.label && s.label[s.schema[k]]) {
+					res[k].label = s.label[s.schema[k]];
+				}
+			}
+
+			for(var i=0; i<s.data.length; i++) {
+				var d = s.data[i];
+				for(k=0; k<s.schema.length; k++) {
+					var tuple = { x: d[s.control], y: d[s.schema[k]] };
+					res[k].data.push(tuple);
+					res[k].control='x';
+					res[k].schema='y';
+				}
+			}
+
+			return res;
+		}
+
+		function parseData(d) {
+			if(d.length === 0) {
+				return;
+			}
+
+			var i, s;
+
+			// get the canvas width so we know if we have to drop points
+			canvasWidth = parseInt(DOM.getStyle(target, 'width'), 10);
+
+			// First we normalise the data into a standard format
+			var res = [];
+			for (i = 0; i < d.length; ++i) {
+				s = normalizeData(d[i]);
+				if(typeof s === 'undefined') 
+					continue;
+
+				if(L.isArray(s.schema)) {
+					s = splitSeries(s);
 				}
 				else {
-					s = { data: d[i] };
+					s = [s];
 				}
-				res.push(s);
+
+				for(var k=0; k<s.length; k++) {
+					s[k] = markDroppedPoints(s[k]);
+					res.push(s[k]);
+				}
 			}
 
 			return res;
 		}
 
 		function parseOptions(o) {
-			$.extend(true, options, o);
-			if (options.grid.borderColor == null)
-				options.grid.borderColor = options.grid.color
-			// backwards compatibility, to be removed in future
-			if (options.xaxis.noTicks && options.xaxis.ticks == null)
-				options.xaxis.ticks = options.xaxis.noTicks;
-			if (options.yaxis.noTicks && options.yaxis.ticks == null)
-				options.yaxis.ticks = options.yaxis.noTicks;
-			if (options.grid.coloredAreas)
-				options.grid.markings = options.grid.coloredAreas;
-			if (options.grid.coloredAreasColor)
-				options.grid.markingsColor = options.grid.coloredAreasColor;
+			if(typeof o === 'undefined') {
+				return;
+			}
+			o = YAHOO.lang.merge(o);
+			for(var k in o)	{
+				if(L.isObject(o[k]) && L.isObject(options[k])) {
+					L.augmentObject(options[k], o[k], true);
+					delete o[k];
+				}
+			}
+			L.augmentObject(options, o, true);
 		}
 
 		function fillInSeriesOptions() {
@@ -226,7 +397,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 				var factor = 1 + sign * Math.ceil(variation / 2) * 0.2;
 				c.scale(factor, factor, factor);
 
-				// FIXME: if we're getting to close to something else,
+				// FIXME: if we're getting too close to something else,
 				// we should probably skip this one
 				colors.push(c);
 
@@ -251,42 +422,37 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 					s.color = colors[s.color].toString();
 
 				// copy the rest
-				s.lines = $.extend(true, {}, options.lines, s.lines);
-				s.points = $.extend(true, {}, options.points, s.points);
-				s.bars = $.extend(true, {}, options.bars, s.bars);
+				s.lines = L.merge(options.lines, s.lines || {});
+				s.points = L.merge(options.points, s.points || {});
+				s.bars = L.merge(options.bars, s.bars || {});
 
 				// turn on lines automatically in case nothing is set
 				if (s.lines.show == null && !s.bars.show && !s.points.show)
 					s.lines.show = true;
+
 				if (s.shadowSize == null)
 					s.shadowSize = options.shadowSize;
 
-				if (!s.xaxis)
-					s.xaxis = axes.xaxis;
-
-				if (s.xaxis == 1)
-					s.xaxis = axes.xaxis;
-				else if (s.xaxis == 2)
+				if (s.xaxis && s.xaxis == 2)
 					s.xaxis = axes.x2axis;
-
-				if (!s.yaxis)
+				else
+					s.xaxis = axes.xaxis;
+				if (s.yaxis && s.yaxis >= 2) {
+					if(!axes['y' + s.yaxis + 'axis'])
+						axes['y' + s.yaxis + 'axis'] = {};
+					if(!options['y' + s.yaxis + 'axis'])
+						options['y' + s.yaxis + 'axis'] = { autoscaleMargin: 0.02 };
+					s.yaxis = axes['y' + s.yaxis + 'axis'];
+				}
+				else
 					s.yaxis = axes.yaxis;
-
-				if (s.yaxis == 1)
-					s.yaxis = axes.yaxis;
-				else if (s.yaxis == 2)
-					s.yaxis = axes.y2axis;
-
-				if (!s.threshold)
-					s.threshold = options.threshold;
-				s.subseries = null;
 			}
 		}
 
 		function processData() {
 			var topSentry = Number.POSITIVE_INFINITY,
 				bottomSentry = Number.NEGATIVE_INFINITY,
-				axis, i, j, k, m, s;
+				axis;
 
 			for (axis in axes) {
 				axes[axis].datamin = topSentry;
@@ -296,40 +462,37 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 				axes[axis].used = false;
 			}
 
-			for (i = 0; i < series.length; ++i) {
-				s = series[i];
-				s.datapoints = { points: [], incr: 2 };
-
+			for (var i = 0; i < series.length; ++i) {
+				var s = series[i];
 				var data = s.data,
-					points = s.datapoints.points,
 					axisx = s.xaxis, axisy = s.yaxis,
 					xmin = topSentry, xmax = bottomSentry,
 					ymin = topSentry, ymax = bottomSentry,
-					x, y, p, incr, format = [];
-
-				// determine the increment
-				if (s.bars.show) {
-					s.datapoints.incr = 3;
-					format.push({ d: 0 });
-				}
-
-				/*
-				// examine data to find out how to copy
-				for (j = 0; j < data.length; ++j) {
-				}*/
-
+					x, y, p;
 
 				axisx.used = axisy.used = true;
-				incr = s.datapoints.incr;
 
-				for (j = k = 0; j < data.length; ++j, k += incr) {
+				if (s.bars.show) {
+					// make sure we got room for the bar
+					var delta = s.bars.align == "left" ? 0 : -s.bars.barWidth/2;
+					xmin += delta;
+					xmax += delta + s.bars.barWidth;
+				}
+
+				for (var j = 0; j < data.length; ++j) {
 					p = data[j];
-					x = null;
-					y = null;
 
-					if (data[j] != null) {
-						x = p[0];
-						y = p[1];
+					if(data[j] === null)
+						continue;
+
+					var x = p.x, y = p.y;
+
+					if(L.isObject(x) && x.getTime) {	// this is a Date object
+						x = x.getTime()/1000;
+					}
+
+					if(L.isObject(y) && y.getTime) {	// this is a Date object
+						y = y.getTime()/1000;
 					}
 
 					// convert to number
@@ -352,196 +515,89 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 						y = null;
 
 					if (x == null || y == null)
-						x = y = null; // make sure everything is cleared
-
-					for (m = 2; m < incr; ++m)
-						points[k + m] = p[m] == null ? format[m-2].d : p[m];
-
-					points[k + 1] = y;
-					points[k] = x;
-				}
-
-				if (s.bars.show) {
-					// make sure we got room for the bar on the dancing floor
-					var delta = s.bars.align == "left" ? 0 : -s.bars.barWidth/2;
-					if(s.bars.horizontal) {
-						ymin += delta;
-						ymax += delta + s.bars.barWidth;
-					}
-					else {
-						xmin += delta;
-						xmax += delta + s.bars.barWidth;
-					}
+						data[j] = x = y = null; // mark this point invalid
 				}
 
 				axisx.datamin = Math.min(axisx.datamin, xmin);
 				axisx.datamax = Math.max(axisx.datamax, xmax);
 				axisy.datamin = Math.min(axisy.datamin, ymin);
 				axisy.datamax = Math.max(axisy.datamax, ymax);
-
-
-				// step charts
-				if (s.lines.show && s.lines.steps) {
-					p = [];
-					// copy, inserting extra points to make steps
-					for (j = k = 0; j < points.length; j += incr, k += incr) {
-						x = points[j];
-						y = points[j + 1];
-						if (j > 0
-							&& points[j - incr] != null
-							&& x != null
-							&& points[j - incr + 1] != y) {
-							p[k] = x;
-							p[k + 1] = points[j - incr + 1];
-							k += incr;
-						}
-
-						p[k] = x;
-						p[k + 1] = y;
-					}
-					s.datapoints.linespoints = p;
-				}
-
-				// possibly split data points because of threshold
-				if (s.threshold) {
-					var orig = $.extend({}, s), thresholded = $.extend({}, s);
-					orig.datapoints = { points: [], incr: incr };
-					thresholded.datapoints = { points: [], incr: incr };
-
-					thresholded.color = s.threshold.color;
-
-					var below = s.threshold.below,
-						origpoints = orig.datapoints.points,
-						threspoints = thresholded.datapoints.points;
-
-					// ordinary points
-					for (j = 0; j < points.length; j += incr) {
-						x = points[j];
-						y = points[j + 1];
-
-						if (y < below)
-							p = threspoints;
-						else
-							p = origpoints;
-
-						p.push(x);
-						p.push(y);
-					}
-
-					// possibly split lines
-					if (s.lines.show) {
-						var lp = s.datapoints.linespoints || points;
-
-						origpoints = [];
-						threspoints = [];
-						p = origpoints;
-
-						for (j = 0; j < lp.length; j += incr) {
-							x = lp[j];
-							y = lp[j + 1];
-
-							var prevp = p;
-							if (y != null) {
-								if (y < below)
-									p = threspoints;
-								else
-									p = origpoints;
-							}
-
-							if (p != prevp && x != null && j > 0 && lp[j - incr] != null) {
-								// find intersection and add it to both
-								k = (x - lp[j - incr]) / (y - lp[j - incr + 1]) * (below - y) + x;
-								prevp.push(k);
-								prevp.push(below);
-								p.push(null); // start new segment
-								p.push(null);
-								p.push(k);
-								p.push(below);
-							}
-
-							p.push(x);
-							p.push(y);
-						}
-
-						orig.datapoints.linespoints = origpoints
-						thresholded.datapoints.linespoints = threspoints;
-					}
-
-					s.subseries = [orig, thresholded];
-				}
 			}
 		}
 
 		function constructCanvas() {
-			function makeCanvas(width, height) {
+			function makeCanvas(width, height, container, style) {
 				var c = document.createElement('canvas');
 				c.width = width;
 				c.height = height;
-				if ($.browser.msie) // excanvas hack
-					c = window.G_vmlCanvasManager.initElement(c);
+				if (typeof G_vmlCanvasManager !== 'undefined') // excanvas hack
+					c = G_vmlCanvasManager.initElement(c);
+
+				if(style) {
+					for(var k in style) {
+						c.style[k] = style[k];
+					}
+				}
+				container.appendChild(c);
+
 				return c;
 			}
 
-			canvasWidth = target.width();
-			canvasHeight = target.height();
-			target.html(""); // clear target
-			if (target.css("position") == 'static')
-				target.css("position", "relative"); // for positioning labels and overlay
+			canvasWidth = parseInt(DOM.getStyle(target, 'width'), 10);
+			canvasHeight = parseInt(DOM.getStyle(target, 'height'), 10);
+			target.innerHTML = ""; // clear target
+			target.style.position = "relative"; // for positioning labels and overlay
 
 			if (canvasWidth <= 0 || canvasHeight <= 0)
 				throw "Invalid dimensions for plot, width = " + canvasWidth + ", height = " + canvasHeight;
 
 			// the canvas
-			canvas = $(makeCanvas(canvasWidth, canvasHeight)).appendTo(target).get(0);
+			canvas = makeCanvas(canvasWidth, canvasHeight, target);
 			ctx = canvas.getContext("2d");
 
 			// overlay canvas for interactive features
-			overlay = $(makeCanvas(canvasWidth, canvasHeight)).css({ position: 'absolute', left: 0, top: 0 }).appendTo(target).get(0);
+			overlay = makeCanvas(canvasWidth, canvasHeight, target, { position: 'absolute', left: '0px', top: '0px' });
 			octx = overlay.getContext("2d");
 
 			// we include the canvas in the event holder too, because IE 7
 			// sometimes has trouble with the stacking order
-			eventHolder = $([overlay, canvas]);
+			eventHolder = [overlay, canvas];
 
 			// bind events
-			if (options.selection.mode != null || options.crosshair.mode != null
-				|| options.grid.hoverable) {
-				// FIXME: temp. work-around until jQuery bug 4398 is fixed
-				eventHolder.each(function () {
-					this.onmousemove = onMouseMove;
-				});
+			if (options.selection.mode != null || options.crosshair.mode != null || options.grid.hoverable) {
+				E.on(eventHolder, 'mousemove', onMouseMove);
 
 				if (options.selection.mode != null)
-					eventHolder.mousedown(onMouseDown);
+					E.on(eventHolder, "mousedown", onMouseDown);
 			}
 
 			if (options.crosshair.mode != null)
-				eventHolder.mouseout(onMouseOut);
+				E.on(eventHolder, "mouseout", onMouseOut);
 
 			if (options.grid.clickable)
-				eventHolder.click(onClick);
+				E.on(eventHolder, "click", onClick);
 		}
 
 		function setupGrid() {
-			function setupAxis(axis, options) {
+			function setupAxis(axis, options, type) {
 				setRange(axis, options);
 				prepareTickGeneration(axis, options);
 				setTicks(axis, options);
 				// add transformation helpers
-				if (axis == axes.xaxis || axis == axes.x2axis) {
+				if (type == 'x') {
 					// data point to canvas coordinate
 					axis.p2c = function (p) { return (p - axis.min) * axis.scale; };
-					// canvas coordinate to data point 
+					// canvas coordinate to data point
 					axis.c2p = function (c) { return axis.min + c / axis.scale; };
 				}
 				else {
 					axis.p2c = function (p) { return (axis.max - p) * axis.scale; };
-					axis.c2p = function (p) { return axis.max - p / axis.scale; };
+					axis.c2p = function (c) { return axis.max - c / axis.scale; };
 				}
 			}
 
 			for (var axis in axes)
-				setupAxis(axes[axis], options[axis]);
+				setupAxis(axes[axis], options[axis], axis.charAt(0));
 
 			setSpacing();
 			insertLabels();
@@ -549,8 +605,13 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 		}
 
 		function setRange(axis, axisOptions) {
-			var min = axisOptions.min != null ? +axisOptions.min : axis.datamin,
-				max = axisOptions.max != null ? +axisOptions.max : axis.datamax;
+			var min = axisOptions.min != null ? (axisOptions.scaletype == 'log' ? Math.log(axisOptions.min<=0?1:axisOptions.min) * Math.LOG10E : axisOptions.min) : axis.datamin;
+			var max = axisOptions.max != null ? (axisOptions.scaletype == 'log' ? Math.log(axisOptions.max) * Math.LOG10E : axisOptions.max) : axis.datamax;
+
+			if(axisOptions.mode === 'time') {
+				if(L.isObject(min) && min.getTime) min = min.getTime()/1000;
+				if(L.isObject(max) && max.getTime) max = max.getTime()/1000;
+			}
 
 			// degenerate case
 			if (min == Number.POSITIVE_INFINITY)
@@ -606,6 +667,8 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 
 			if (axisOptions.mode == "time") {
 				// pretty handling of time
+
+				delta*=1000;
 
 				// map of app. size of time units in milliseconds
 				var timeUnitSize = {
@@ -673,7 +736,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 				generator = function(axis) {
 					var ticks = [],
 						tickSize = axis.tickSize[0], unit = axis.tickSize[1],
-						d = new Date(axis.min);
+						d = new Date(axis.min*1000);
 
 					var step = tickSize * timeUnitSize[unit];
 
@@ -706,7 +769,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 					do {
 						prev = v;
 						v = d.getTime();
-						ticks.push({ v: v, label: axis.tickFormatter(v, axis) });
+						ticks.push({ v: v/1000, label: axis.tickFormatter(v, axis) });
 						if (unit == "month") {
 							if (tickSize < 1) {
 								// a bit complicated - we'll divide the month
@@ -728,7 +791,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 						}
 						else
 							d.setTime(v + step);
-					} while (v < axis.max && v != prev);
+					} while (v < axis.max*1000 && v != prev);
 
 					return ticks;
 				};
@@ -738,31 +801,32 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 
 					// first check global format
 					if (axisOptions.timeformat != null)
-						return $.plot.formatDate(d, axisOptions.timeformat, axisOptions.monthNames);
+						return YAHOO.util.Date.format(d, {format: axisOptions.timeformat}, options.locale);
 
 					var t = axis.tickSize[0] * timeUnitSize[axis.tickSize[1]];
 					var span = axis.max - axis.min;
+					span*=1000;
 
 					if (t < timeUnitSize.minute)
-						fmt = "%h:%M:%S";
+						fmt = "%k:%M:%S";
 					else if (t < timeUnitSize.day) {
 						if (span < 2 * timeUnitSize.day)
-							fmt = "%h:%M";
+							fmt = "%k:%M";
 						else
-							fmt = "%b %d %h:%M";
+							fmt = "%b %d %k:%M";
 					}
 					else if (t < timeUnitSize.month)
 						fmt = "%b %d";
 					else if (t < timeUnitSize.year) {
-						if (span < timeUnitSize.year)
+						if (span < timeUnitSize.year/2)
 							fmt = "%b";
 						else
-							fmt = "%b %y";
+							fmt = "%b %Y";
 					}
 					else
-						fmt = "%y";
+						fmt = "%Y";
 
-					return $.plot.formatDate(d, fmt, axisOptions.monthNames);
+					return YAHOO.util.Date.format(d, {format: fmt}, axisOptions.timelang);
 				};
 			}
 			else {
@@ -809,7 +873,11 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 					do {
 						prev = v;
 						v = start + i * axis.tickSize;
-						ticks.push({ v: v, label: axis.tickFormatter(v, axis) });
+						var t=v;
+						if(axis.scaletype == 'log') {
+							t = Math.exp(t / Math.LOG10E);
+						}
+						ticks.push({ v: v, label: axis.tickFormatter(t, axis) });
 						++i;
 					} while (v < axis.max && v != prev);
 					return ticks;
@@ -820,9 +888,10 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 				};
 			}
 
+			axis.scaletype = axisOptions.scaletype;
 			axis.tickSize = unit ? [size, unit] : size;
 			axis.tickGenerator = generator;
-			if ($.isFunction(axisOptions.tickFormatter))
+			if (L.isFunction(axisOptions.tickFormatter))
 				axis.tickFormatter = function (v, axis) { return "" + axisOptions.tickFormatter(v, axis); };
 			else
 				axis.tickFormatter = formatter;
@@ -847,7 +916,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 			else if (axisOptions.ticks) {
 				var ticks = axisOptions.ticks;
 
-				if ($.isFunction(ticks))
+				if (L.isFunction(ticks))
 					// generate the ticks
 					ticks = ticks({ min: axis.min, max: axis.max });
 
@@ -863,6 +932,12 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 					}
 					else
 						v = t;
+					if (axisOptions.scaletype == 'log') {
+						if (label == null)
+							label = v;
+						v = Math.log(v) * Math.LOG10E;
+					}
+
 					if (label == null)
 						label = axis.tickFormatter(v, axis);
 					axis.ticks[i] = { v: v, label: label };
@@ -898,10 +973,10 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 
 					axis.labelHeight = 0;
 					if (labels.length > 0) {
-						var dummyDiv = $('<div style="position:absolute;top:-10000px;width:10000px;font-size:smaller">'
-										 + labels.join("") + '<div style="clear:left"></div></div>').appendTo(target);
-						axis.labelHeight = dummyDiv.height();
-						dummyDiv.remove();
+						var dummyDiv = target.appendChild(DOM.createElementFromMarkup('<div style="position:absolute;top:-10000px;width:10000px;font-size:smaller">'
+										 + labels.join("") + '<div style="clear:left"></div></div>'));
+						axis.labelHeight = dummyDiv.offsetHeight;
+						target.removeChild(dummyDiv);
 					}
 				}
 			}
@@ -917,13 +992,13 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 					}
 
 					if (labels.length > 0) {
-						var dummyDiv = $('<div style="position:absolute;top:-10000px;font-size:smaller">'
-										 + labels.join("") + '</div>').appendTo(target);
+						var dummyDiv = target.appendChild(DOM.createElementFromMarkup('<div style="position:absolute;top:-10000px;font-size:smaller">'
+										 + labels.join("") + '</div>'));
 						if (axis.labelWidth == null)
-							axis.labelWidth = dummyDiv.width();
+							axis.labelWidth = dummyDiv.offsetWidth;
 						if (axis.labelHeight == null)
-							axis.labelHeight = dummyDiv.find("div").height();
-						dummyDiv.remove();
+							axis.labelHeight = dummyDiv.firstChild.offsetHeight;
+						target.removeChild(dummyDiv);
 					}
 
 					if (axis.labelWidth == null)
@@ -963,21 +1038,15 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 			plotHeight = canvasHeight - plotOffset.bottom - plotOffset.top;
 
 			// precompute how much the axis is scaling a point in canvas space
-			axes.xaxis.scale = plotWidth / (axes.xaxis.max - axes.xaxis.min);
-			axes.yaxis.scale = plotHeight / (axes.yaxis.max - axes.yaxis.min);
-			axes.x2axis.scale = plotWidth / (axes.x2axis.max - axes.x2axis.min);
-			axes.y2axis.scale = plotHeight / (axes.y2axis.max - axes.y2axis.min);
+			for(var axis in axes) {
+				axes[axis].scale = (axis.charAt(0) == 'x' ? plotWidth : plotHeight) / (axes[axis].max - axes[axis].min);
+			}
 		}
 
 		function draw() {
 			drawGrid();
-			for (var i = 0; i < series.length; ++i) {
-				var s = series[i];
-				if (s.subseries)
-					for (var j = 0; j < s.subseries.length; ++j)
-						drawSeries(s.subseries[j]);
-				else
-					drawSeries(s);
+			for (var i = 0; i < series.length; i++) {
+				drawSeries(series[i]);
 			}
 		}
 
@@ -987,21 +1056,23 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 				axis, from, to, reverse;
 
 			if (ranges[firstAxis]) {
-				axis = axes[firstAxis];
-				from = ranges[firstAxis].from;
-				to = ranges[firstAxis].to;
+				axis = firstAxis;
 			}
 			else if (ranges[secondaryAxis]) {
-				axis = axes[secondaryAxis];
-				from = ranges[secondaryAxis].from;
-				to = ranges[secondaryAxis].to;
+				axis = secondaryAxis;
 			}
-			else {
-				// backwards-compat stuff - to be removed in future
-				axis = axes[firstAxis];
-				from = ranges[coord + "1"];
-				to = ranges[coord + "2"];
+
+			from = ranges[axis].from;
+			to = ranges[axis].to;
+
+			if (options[axis].scaletype == 'log') {
+				if (from != null)
+					from = Math.log(from) * Math.LOG10E;
+				if (to != null)
+					to = Math.log(to) * Math.LOG10E;
 			}
+
+			axis = axes[axis];
 
 			// auto-reverse as an added bonus
 			if (from != null && to != null && from > to)
@@ -1026,7 +1097,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 			// draw markings
 			var markings = options.grid.markings;
 			if (markings) {
-				if ($.isFunction(markings))
+				if (L.isFunction(markings))
 					// xmin etc. are backwards-compatible, to be removed in future
 					markings = markings({ xmin: axes.xaxis.min, xmax: axes.xaxis.max, ymin: axes.yaxis.min, ymax: axes.yaxis.max, xaxis: axes.xaxis, yaxis: axes.yaxis, x2axis: axes.x2axis, y2axis: axes.y2axis });
 
@@ -1069,8 +1140,6 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 						ctx.strokeStyle = m.color || options.grid.markingsColor;
 						ctx.beginPath();
 						ctx.lineWidth = m.lineWidth || options.grid.markingsLineWidth;
-						//ctx.moveTo(Math.floor(xrange.from), yrange.from);
-						//ctx.lineTo(Math.floor(xrange.to), yrange.to);
 						ctx.moveTo(xrange.from, yrange.from);
 						ctx.lineTo(xrange.to, yrange.to);
 						ctx.stroke();
@@ -1085,57 +1154,60 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 				}
 			}
 
-			// draw the inner grid
-			ctx.lineWidth = 1;
-			ctx.strokeStyle = options.grid.tickColor;
-			ctx.beginPath();
-			var v, axis = axes.xaxis;
-			for (i = 0; i < axis.ticks.length; ++i) {
-				v = axis.ticks[i].v;
-				if (v <= axis.min || v >= axes.xaxis.max)
-					continue;   // skip those lying on the axes
-
-				ctx.moveTo(Math.floor(axis.p2c(v)) + ctx.lineWidth/2, 0);
-				ctx.lineTo(Math.floor(axis.p2c(v)) + ctx.lineWidth/2, plotHeight);
+			if(options.grid.showLines) {
+				// draw the inner grid
+				ctx.lineWidth = 1;
+				ctx.strokeStyle = options.grid.tickColor;
+				ctx.beginPath();
+				var v, axis = axes.xaxis;
+				for (i = 0; i < axis.ticks.length; ++i) {
+					v = axis.ticks[i].v;
+					if (v <= axis.min || v >= axes.xaxis.max)
+						continue;   // skip those lying on the axes
+	
+					ctx.moveTo(Math.floor(axis.p2c(v)) + ctx.lineWidth/2, 0);
+					ctx.lineTo(Math.floor(axis.p2c(v)) + ctx.lineWidth/2, plotHeight);
+				}
+	
+				axis = axes.yaxis;
+				for (i = 0; i < axis.ticks.length; ++i) {
+					v = axis.ticks[i].v;
+					if (v <= axis.min || v >= axis.max)
+						continue;
+	
+					ctx.moveTo(0, Math.floor(axis.p2c(v)) + ctx.lineWidth/2);
+					ctx.lineTo(plotWidth, Math.floor(axis.p2c(v)) + ctx.lineWidth/2);
+				}
+	
+				axis = axes.x2axis;
+				for (i = 0; i < axis.ticks.length; ++i) {
+					v = axis.ticks[i].v;
+					if (v <= axis.min || v >= axis.max)
+						continue;
+	
+					ctx.moveTo(Math.floor(axis.p2c(v)) + ctx.lineWidth/2, -5);
+					ctx.lineTo(Math.floor(axis.p2c(v)) + ctx.lineWidth/2, 5);
+				}
+	
+				axis = axes.y2axis;
+				for (i = 0; i < axis.ticks.length; ++i) {
+					v = axis.ticks[i].v;
+					if (v <= axis.min || v >= axis.max)
+						continue;
+	
+					ctx.moveTo(plotWidth-5, Math.floor(axis.p2c(v)) + ctx.lineWidth/2);
+					ctx.lineTo(plotWidth+5, Math.floor(axis.p2c(v)) + ctx.lineWidth/2);
+				}
+	
+				ctx.stroke();
 			}
-
-			axis = axes.yaxis;
-			for (i = 0; i < axis.ticks.length; ++i) {
-				v = axis.ticks[i].v;
-				if (v <= axis.min || v >= axis.max)
-					continue;
-
-				ctx.moveTo(0, Math.floor(axis.p2c(v)) + ctx.lineWidth/2);
-				ctx.lineTo(plotWidth, Math.floor(axis.p2c(v)) + ctx.lineWidth/2);
-			}
-
-			axis = axes.x2axis;
-			for (i = 0; i < axis.ticks.length; ++i) {
-				v = axis.ticks[i].v;
-				if (v <= axis.min || v >= axis.max)
-					continue;
-
-				ctx.moveTo(Math.floor(axis.p2c(v)) + ctx.lineWidth/2, -5);
-				ctx.lineTo(Math.floor(axis.p2c(v)) + ctx.lineWidth/2, 5);
-			}
-
-			axis = axes.y2axis;
-			for (i = 0; i < axis.ticks.length; ++i) {
-				v = axis.ticks[i].v;
-				if (v <= axis.min || v >= axis.max)
-					continue;
-
-				ctx.moveTo(plotWidth-5, Math.floor(axis.p2c(v)) + ctx.lineWidth/2);
-				ctx.lineTo(plotWidth+5, Math.floor(axis.p2c(v)) + ctx.lineWidth/2);
-			}
-
-			ctx.stroke();
 
 			if (options.grid.borderWidth) {
 				// draw border
 				var bw = options.grid.borderWidth;
 				ctx.lineWidth = bw;
 				ctx.strokeStyle = options.grid.borderColor;
+				ctx.lineJoin = "round";
 				ctx.strokeRect(-bw/2, -bw/2, plotWidth + bw, plotHeight + bw);
 			}
 
@@ -1143,7 +1215,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 		}
 
 		function insertLabels() {
-			target.find(".tickLabels").remove();
+			DOM.getElementsByClassName("tickLabels", "div", target, DOM.removeElement);
 
 			var html = ['<div class="tickLabels" style="font-size:smaller;color:' + options.grid.color + '">'];
 
@@ -1177,7 +1249,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 
 			html.push('</div>');
 
-			target.append(html.join(""));
+			target.appendChild(DOM.createElementFromMarkup(html.join("")));
 		}
 
 		function drawSeries(series) {
@@ -1190,18 +1262,19 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 		}
 
 		function drawSeriesLines(series) {
-			function plotLine(datapoints, xoffset, yoffset, axisx, axisy) {
-				var points = datapoints.linespoints || datapoints.points,
-					incr = datapoints.incr,
-					prevx = null, prevy = null;
+			function plotLine(data, xoffset, yoffset, axisx, axisy) {
+				var prev = null, cur=null;
 
 				ctx.beginPath();
-				for (var i = incr; i < points.length; i += incr) {
-					var x1 = points[i - incr], y1 = points[i - incr + 1],
-						x2 = points[i], y2 = points[i + 1];
+				for (var i = 0; i < points.length; i++) {
+					prev = cur;
+					cur = data[i];
 
-					if (x1 == null || x2 == null)
+					if(prev == null || cur == null)
 						continue;
+
+					var x1 = prev.x, y1 = prev.y,
+						x2 = cur.x, y2 = cur.y;
 
 					// clip with ymin
 					if (y1 <= y2 && y1 < axisy.min) {
@@ -1260,25 +1333,22 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 						x2 = axisx.max;
 					}
 
-					if (x1 != prevx || y1 != prevy)
+					if (x1 != prev.x || y1 != prev.y)
 						ctx.moveTo(axisx.p2c(x1) + xoffset, axisy.p2c(y1) + yoffset);
 
-					prevx = x2;
-					prevy = y2;
 					ctx.lineTo(axisx.p2c(x2) + xoffset, axisy.p2c(y2) + yoffset);
 				}
 				ctx.stroke();
 			}
 
-			function plotLineArea(datapoints, axisx, axisy) {
-				var points = datapoints.linespoints || datapoints.points,
-					incr = datapoints.incr,
+			function plotLineArea(data, axisx, axisy) {
+				var prev, cur = null,
 					bottom = Math.min(Math.max(0, axisy.min), axisy.max),
 					top, lastX = 0, areaOpen = false;
 
-				for (var i = incr; i < points.length; i += incr) {
-					var x1 = points[i - incr], y1 = points[i - incr + 1],
-						x2 = points[i], y2 = points[i + 1];
+				for (var i = 0; i < data.length; i++) {
+					prev = cur;
+					cur = data[i];
 
 					if (areaOpen && x1 != null && x2 == null) {
 						// close area
@@ -1288,8 +1358,11 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 						continue;
 					}
 
-					if (x1 == null || x2 == null)
+					if (prev == null || cur == null)
 						continue;
+
+					var x1 = prev.x, y1 = prev.y,
+						x2 = cur.x, y2 = cur.y;
 
 					// clip x values
 
@@ -1418,9 +1491,9 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 				ctx.lineWidth = sw;
 				ctx.strokeStyle = "rgba(0,0,0,0.1)";
 				var xoffset = 1;
-				plotLine(series.datapoints, xoffset, Math.sqrt((lw/2 + sw/2)*(lw/2 + sw/2) - xoffset*xoffset), series.xaxis, series.yaxis);
+				plotLine(series.data, xoffset, Math.sqrt((lw/2 + sw/2)*(lw/2 + sw/2) - xoffset*xoffset), series.xaxis, series.yaxis);
 				ctx.lineWidth = sw/2;
-				plotLine(series.datapoints, xoffset, Math.sqrt((lw/2 + sw/4)*(lw/2 + sw/4) - xoffset*xoffset), series.xaxis, series.yaxis);
+				plotLine(series.data, xoffset, Math.sqrt((lw/2 + sw/4)*(lw/2 + sw/4) - xoffset*xoffset), series.xaxis, series.yaxis);
 			}
 
 			ctx.lineWidth = lw;
@@ -1428,21 +1501,22 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 			var fillStyle = getFillStyle(series.lines, series.color, 0, plotHeight);
 			if (fillStyle) {
 				ctx.fillStyle = fillStyle;
-				plotLineArea(series.datapoints, series.xaxis, series.yaxis);
+				plotLineArea(series.data, series.xaxis, series.yaxis);
 			}
 
 			if (lw > 0)
-				plotLine(series.datapoints, 0, 0, series.xaxis, series.yaxis);
+				plotLine(series.data, 0, 0, series.xaxis, series.yaxis);
 			ctx.restore();
 		}
 
 		function drawSeriesPoints(series) {
-			function plotPoints(datapoints, radius, fillStyle, offset, circumference, axisx, axisy) {
-				var points = datapoints.points, incr = datapoints.incr;
+			function plotPoints(data, radius, fillStyle, offset, circumference, axisx, axisy) {
+				for (var i = 0; i < points.length; i++) {
+					if (data[i] == null || series.dropped[i])
+						continue;
 
-				for (var i = 0; i < points.length; i += incr) {
-					var x = points[i], y = points[i + 1];
-					if (x == null || x < axisx.min || x > axisx.max || y < axisy.min || y > axisy.max)
+					var x = data[i].x, y = data[i].y;
+					if (x < axisx.min || x > axisx.max || y < axisy.min || y > axisy.max)
 						continue;
 
 					ctx.beginPath();
@@ -1466,60 +1540,34 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 				var w = sw / 2;
 				ctx.lineWidth = w;
 				ctx.strokeStyle = "rgba(0,0,0,0.1)";
-				plotPoints(series.datapoints, radius, null, w + w/2, 2 * Math.PI,
+				plotPoints(series.data, radius, null, w + w/2, 2 * Math.PI,
 						   series.xaxis, series.yaxis);
 
 				ctx.strokeStyle = "rgba(0,0,0,0.2)";
-				plotPoints(series.datapoints, radius, null, w/2, 2 * Math.PI,
+				plotPoints(series.data, radius, null, w/2, 2 * Math.PI,
 						   series.xaxis, series.yaxis);
 			}
 
 			ctx.lineWidth = lw;
 			ctx.strokeStyle = series.color;
-			plotPoints(series.datapoints, radius,
+			plotPoints(series.data, radius,
 					   getFillStyle(series.points, series.color), 0, 2 * Math.PI,
 					   series.xaxis, series.yaxis);
 			ctx.restore();
 		}
 
-		function drawBar(x, y, b, barLeft, barRight, offset, fillStyleCallback, axisx, axisy, c, horizontal) {
-			var left, right, bottom, top,
-				drawLeft, drawRight, drawTop, drawBottom,
-				tmp;
+		function drawBar(x, y, barLeft, barRight, offset, fill, axisx, axisy, c) {
+			var drawLeft = true, drawRight = true,
+				drawTop = true, drawBottom = false,
+				left = x + barLeft, right = x + barRight,
+				bottom = 0, top = y;
 
-			if (horizontal) {
-				drawBottom = drawRight = drawTop = true;
-				drawLeft = false;
-				left = b;
-				right = x;
-				top = y + barLeft;
-				bottom = y + barRight;
-
-				// account for negative bars
-				if (right < left) {
-					tmp = right;
-					right = left;
-					left = tmp;
-					drawLeft = true;
-					drawRight = false;
-				}
-			}
-			else {
-				drawLeft = drawRight = drawTop = true;
-				drawBottom = false;
-				left = x + barLeft;
-				right = x + barRight;
-				bottom = b;
-				top = y;
-
-				// account for negative bars
-				if (top < bottom) {
-					tmp = top;
-					top = bottom;
-					bottom = tmp;
-					drawBottom = true;
-					drawTop = false;
-				}
+			// account for negative bars
+			if (top < bottom) {
+				top = 0;
+				bottom = y;
+				drawBottom = true;
+				drawTop = false;
 			}
 		   
 			// clip
@@ -1553,13 +1601,17 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 			top = axisy.p2c(top);
 
 			// fill the bar
-			if (fillStyleCallback) {
+			if (fill) {
 				c.beginPath();
 				c.moveTo(left, bottom);
 				c.lineTo(left, top);
 				c.lineTo(right, top);
 				c.lineTo(right, bottom);
-				c.fillStyle = fillStyleCallback(bottom, top);
+				if(typeof fill === 'function') {
+					c.fillStyle = fill(bottom, top);
+				} else if(typeof fill === 'string') {
+					c.fillStyle = fill;
+				}
 				c.fill();
 			}
 
@@ -1590,13 +1642,12 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 		}
 
 		function drawSeriesBars(series) {
-			function plotBars(datapoints, barLeft, barRight, offset, fillStyleCallback, axisx, axisy) {
-				var points = datapoints.points, incr = datapoints.incr;
+			function plotBars(data, barLeft, barRight, offset, fill, axisx, axisy) {
 
-				for (var i = 0; i < points.length; i += incr) {
-					if (points[i] == null)
+				for (var i = 0; i < data.length; i++) {
+					if (data[i] == null)
 						continue;
-					drawBar(points[i], points[i + 1], points[i + 2], barLeft, barRight, offset, fillStyleCallback, axisx, axisy, ctx, series.bars.horizontal);
+					drawBar(data[i].x, data[i].y, barLeft, barRight, offset, fill, axisx, axisy, ctx);
 				}
 			}
 
@@ -1607,8 +1658,8 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 			ctx.lineWidth = series.bars.lineWidth;
 			ctx.strokeStyle = series.color;
 			var barLeft = series.bars.align == "left" ? 0 : -series.bars.barWidth/2;
-			var fillStyleCallback = series.bars.fill ? function (bottom, top) { return getFillStyle(series.bars, series.color, bottom, top); } : null;
-			plotBars(series.datapoints, barLeft, barLeft + series.bars.barWidth, 0, fillStyleCallback, series.xaxis, series.yaxis);
+			var fill = series.bars.fill ? function (bottom, top) { return getFillStyle(series.bars, series.color, bottom, top); } : null;
+			plotBars(series.data, barLeft, barLeft + series.bars.barWidth, 0, fill, series.xaxis, series.yaxis);
 			ctx.restore();
 		}
 
@@ -1627,7 +1678,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 		}
 
 		function insertLegend() {
-			target.find(".legend").remove();
+			DOM.getElementsByClassName("legend", "div", target, DOM.removeElement);
 
 			if (!options.legend.show)
 				return;
@@ -1662,7 +1713,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 
 			var table = '<table style="font-size:smaller;color:' + options.grid.color + '">' + fragments.join("") + '</table>';
 			if (options.legend.container != null)
-				$(options.legend.container).html(table);
+				DOM.get(options.legend.container).innerHTML = table;
 			else {
 				var pos = "",
 					p = options.legend.position,
@@ -1677,7 +1728,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 					pos += 'right:' + (m[0] + plotOffset.right) + 'px;';
 				else if (p.charAt(1) == "w")
 					pos += 'left:' + (m[0] + plotOffset.left) + 'px;';
-				var legend = $('<div class="legend">' + table.replace('style="', 'style="position:absolute;' + pos +';') + '</div>').appendTo(target);
+				var legend = target.appendChild(DOM.createElementFromMarkup('<div class="legend">' + table.replace('style="', 'style="position:absolute;' + pos +';') + '</div>'));
 				if (options.legend.backgroundOpacity != 0.0) {
 					// put in the transparent background
 					// separately to avoid blended labels and
@@ -1692,7 +1743,13 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 						c = parseColor(tmp).adjust(null, null, null, 1).toString();
 					}
 					var div = legend.children();
-					$('<div style="position:absolute;width:' + div.width() + 'px;height:' + div.height() + 'px;' + pos +'background-color:' + c + ';"> </div>').prependTo(legend).css('opacity', options.legend.backgroundOpacity);
+					var _el = DOM.insertBefore(
+								DOM.createElementFromMarkup('<div style="position:absolute;width:' + parseInt(DOM.getStyle(div, 'width'), 10)
+											+ 'px;height:' + parseInt(DOM.getStyle(div, 'height'), 10) + 'px;'
+											+ pos +'background-color:' + c + ';"> </div>'),
+								legend
+							);
+					DOM.setStyle(_el, 'opacity', options.legend.backgroundOpacity);
 				}
 			}
 		}
@@ -1711,30 +1768,35 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 			hoverTimeout = null;
 
 		// Returns the data item the mouse is over, or null if none is found
-		function findNearbyItem(mouseX, mouseY, seriesFilter) {
+		function findNearbyItem(mouseX, mouseY) {
 			var maxDistance = options.grid.mouseActiveRadius,
 				lowestDistance = maxDistance * maxDistance + 1,
 				item = null, foundPoint = false, i, j;
 
-			for (var i = 0; i < series.length; ++i) {
-				if (!seriesFilter(series[i]))
-					continue;
+			function result(i, j) {
+				return {
+					datapoint: series[i].data[j],
+					dataIndex: j,
+					series: series[i],
+					seriesIndex: i
+				};
+			}
 
+			for (var i = 0; i < series.length; ++i) {
 				var s = series[i],
 					axisx = s.xaxis,
 					axisy = s.yaxis,
-					points = s.datapoints.points,
-					incr = s.datapoints.incr,
 					mx = axisx.c2p(mouseX), // precompute some stuff to make the loop faster
 					my = axisy.c2p(mouseY),
 					maxx = maxDistance / axisx.scale,
 					maxy = maxDistance / axisy.scale;
 
 				if (s.lines.show || s.points.show) {
-					for (j = 0; j < points.length; j += incr) {
-						var x = points[j], y = points[j + 1];
-						if (x == null)
+					for (j = 0; j < data.length; j++ ) {
+						if (data[j] == null)
 							continue;
+
+						var x = data[j].x, y = data[j].y;
 
 						// For points and lines, the cursor must be within a
 						// certain distance to the data point
@@ -1749,7 +1811,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 							dist = dx * dx + dy * dy; // no idea in taking sqrt
 						if (dist < lowestDistance) {
 							lowestDistance = dist;
-							item = [i, j / incr];
+							item = result(i, j);
 						}
 					}
 				}
@@ -1758,51 +1820,28 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 					var barLeft = s.bars.align == "left" ? 0 : -s.bars.barWidth/2,
 						barRight = barLeft + s.bars.barWidth;
 
-					for (j = 0; j < points.length; j += incr) {
-						var x = points[j], y = points[j + 1], b = points[j + 2];
+					for (j = 0; j < data.length; j++) {
+						var x = data[j].x, y = data[j].y;
 						if (x == null)
 							continue;
   
 						// for a bar graph, the cursor must be inside the bar
-						if (series[i].bars.horizontal ? 
-							(mx <= Math.max(b, x) && mx >= Math.min(b, x) && 
-							 my >= y + barLeft && my <= y + barRight) :
-							(mx >= x + barLeft && mx <= x + barRight &&
-							 my >= Math.min(b, y) && my <= Math.max(b, y)))
-								item = [i, j / incr];
+						if ((mx >= x + barLeft && mx <= x + barRight &&
+							 my >= Math.min(0, y) && my <= Math.max(0, y)))
+								item = result(i, j);
 					}
 				}
-			}
-
-			if (item) {
-				i = item[0];
-				j = item[1];
-
-				return { datapoint: series[i].data[j],
-						 dataIndex: j,
-						 series: series[i],
-						 seriesIndex: i }
 			}
 
 			return null;
 		}
 
-		function onMouseMove(ev) {
-			// FIXME: temp. work-around until jQuery bug 4398 is fixed
-			var e = ev || window.event;
-			if (e.pageX == null && e.clientX != null) {
-				var de = document.documentElement, b = document.body;
-				lastMousePos.pageX = e.clientX + (de && de.scrollLeft || b.scrollLeft || 0) - (de.clientLeft || 0);
-				lastMousePos.pageY = e.clientY + (de && de.scrollTop || b.scrollTop || 0) - (de.clientTop || 0);
-			}
-			else {
-				lastMousePos.pageX = e.pageX;
-				lastMousePos.pageY = e.pageY;
-			}
+		function onMouseMove(e) {
+			lastMousePos.pageX = E.getPageX(e);
+			lastMousePos.pageY = E.getPageY(e);
 
 			if (options.grid.hoverable)
-				triggerClickHoverEvent("plothover", lastMousePos,
-									   function (s) { return s["hoverable"] != false; });
+				triggerClickHoverEvent("plothover", lastMousePos);
 
 			if (options.crosshair.mode != null) {
 				if (!selection.active) {
@@ -1814,14 +1853,13 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 			}
 
 			if (selection.active) {
-				target.trigger("plotselecting", [ selectionIsSane() ? getSelectionForEvent() : null ]);
-
 				updateSelection(lastMousePos);
 			}
 		}
 
 		function onMouseDown(e) {
-			if (e.which != 1)  // only accept left-click
+			var button = e.which || e.button;
+			if (button != 1)  // only accept left-click
 				return;
 
 			// cancel out any text selections
@@ -1837,14 +1875,15 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 				document.ondrag = function () { return false; };
 			}
 
-			setSelectionPos(selection.first, e);
+			var mousePos = {pageX: E.getPageX(e), pageY: E.getPageY(e)};
+			setSelectionPos(selection.first, mousePos);
 
 			lastMousePos.pageX = null;
 			selection.active = true;
-			$(document).one("mouseup", onSelectionMouseUp);
+			E.on(document, "mouseup", onSelectionMouseUp);
 		}
 
-		function onMouseOut(ev) {
+		function onMouseOut(e) {
 			if (options.crosshair.mode != null && crosshair.pos.x != -1) {
 				crosshair.pos.x = -1;
 				triggerRedrawOverlay();
@@ -1857,45 +1896,28 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 				return;
 			}
 
-			triggerClickHoverEvent("plotclick", e,
-								   function (s) { return s["clickable"] != false; });
+			var mousePos = {pageX: E.getPageX(e), pageY: E.getPageY(e)};
+			triggerClickHoverEvent("plotclick", mousePos);
 		}
-
-		/*
-		function userPositionInCanvasSpace(pos) {
-			return { x: parseInt(pos.x != null ? axes.xaxis.p2c(pos.x) : axes.x2axis.p2c(pos.x2)),
-					 y: parseInt(pos.y != null ? axes.yaxis.p2c(pos.y) : axes.y2axis.p2c(pos.y2)) };
-		}
-
-		function positionInDivSpace(pos) {
-			var cpos = userPositionInCanvasSpace(pos);
-			return { x: cpos.x + plotOffset.left,
-					 y: cpos.y + plotOffset.top };
-		}*/
 
 		// trigger click or hover event (they send the same parameters
 		// so we share their code)
-		function triggerClickHoverEvent(eventname, event, seriesFilter) {
-			var offset = eventHolder.offset(),
+		function triggerClickHoverEvent(eventname, event) {
+			var offset = DOM.getXY(eventHolder[0]),
 				pos = { pageX: event.pageX, pageY: event.pageY },
-				canvasX = event.pageX - offset.left - plotOffset.left,
-				canvasY = event.pageY - offset.top - plotOffset.top;
+				canvasX = event.pageX - offset[0] - plotOffset.left,
+				canvasY = event.pageY - offset[1] - plotOffset.top;
 
-			if (axes.xaxis.used)
-				pos.x = axes.xaxis.c2p(canvasX);
-			if (axes.yaxis.used)
-				pos.y = axes.yaxis.c2p(canvasY);
-			if (axes.x2axis.used)
-				pos.x2 = axes.x2axis.c2p(canvasX);
-			if (axes.y2axis.used)
-				pos.y2 = axes.y2axis.c2p(canvasY);
+			for(var axis in axes)
+				if(axes[axis].used)
+					pos[axis.replace(/xis$/, '')] = axes[axis].c2p(axis.charAt(0) == 'x' ? canvasX :  canvasY);
 
-			var item = findNearbyItem(canvasX, canvasY, seriesFilter);
+			var item = findNearbyItem(canvasX, canvasY);
 
 			if (item) {
 				// fill in mouse pos for any listeners out there
-				item.pageX = parseInt(item.series.xaxis.p2c(item.datapoint[0]) + offset.left + plotOffset.left);
-				item.pageY = parseInt(item.series.yaxis.p2c(item.datapoint[1]) + offset.top + plotOffset.top);
+				item.pageX = parseInt(item.series.xaxis.p2c(item.datapoint[0]) + offset[0] + plotOffset.left);
+				item.pageY = parseInt(item.series.yaxis.p2c(item.datapoint[1]) + offset[1] + plotOffset.top);
 			}
 
 			if (options.grid.autoHighlight) {
@@ -1911,7 +1933,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 					highlight(item.series, item.datapoint, eventname);
 			}
 
-			target.trigger(eventname, [ pos, item ]);
+			plot.fireEvent(eventname, {pos: pos, item: item });
 		}
 
 		function triggerRedrawOverlay() {
@@ -2034,18 +2056,19 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 		}
 
 		function drawBarHighlight(series, point) {
+			octx.lineJoin = "round";
 			octx.lineWidth = series.bars.lineWidth;
 			octx.strokeStyle = parseColor(series.color).scale(1, 1, 1, 0.5).toString();
 			var fillStyle = parseColor(series.color).scale(1, 1, 1, 0.5).toString();
 			var barLeft = series.bars.align == "left" ? 0 : -series.bars.barWidth/2;
-			drawBar(point[0], point[1], point[2] || 0, barLeft, barLeft + series.bars.barWidth,
-					0, function () { return fillStyle; }, series.xaxis, series.yaxis, octx, series.bars.horizontal);
+			drawBar(point.x, point.y, barLeft, barLeft + series.bars.barWidth,
+					0, function () { return fillStyle; }, series.xaxis, series.yaxis, octx);
 		}
 
 		function setPositionFromEvent(pos, e) {
-			var offset = eventHolder.offset();
-			pos.x = clamp(0, e.pageX - offset.left - plotOffset.left, plotWidth);
-			pos.y = clamp(0, e.pageY - offset.top - plotOffset.top, plotHeight);
+			var offset = DOM.getXY(eventHolder[0]);
+			pos.x = clamp(0, e.pageX - offset[0] - plotOffset.left, plotWidth);
+			pos.y = clamp(0, e.pageY - offset[1] - plotOffset.top, plotHeight);
 		}
 
 		function setCrosshair(pos) {
@@ -2079,11 +2102,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 		function triggerSelectedEvent() {
 			var r = getSelectionForEvent();
 
-			target.trigger("plotselected", [ r ]);
-
-			// backwards-compat stuff, to be removed in future
-			if (axes.xaxis.used && axes.yaxis.used)
-				target.trigger("selected", [ { x1: r.xaxis.from, y1: r.yaxis.from, x2: r.xaxis.to, y2: r.yaxis.to } ]);
+			plot.fireEvent("plotselected", r);
 		}
 
 		function onSelectionMouseUp(e) {
@@ -2095,7 +2114,8 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 
 			// no more draggy-dee-drag
 			selection.active = false;
-			updateSelection(e);
+			var mousePos = {pageX: E.getPageX(e), pageY: E.getPageY(e)};
+			updateSelection(mousePos);
 
 			if (selectionIsSane()) {
 				triggerSelectedEvent();
@@ -2103,10 +2123,11 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 			}
 			else {
 				// this counts as a clear
-				target.trigger("plotunselected", [ ]);
-				target.trigger("plotselecting", [ null ]);
+				plot.fireEvent("plotunselected", {});
+				plot.fireEvent("plotselecting", {});
 			}
 
+			E.removeListener(document, "mouseup", onSelectionMouseUp);
 			return false;
 		}
 
@@ -2146,7 +2167,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 				selection.show = false;
 				triggerRedrawOverlay();
 				if (!preventEvent)
-					target.trigger("plotunselected", [ ]);
+					plot.fireEvent("plotunselected", {});
 			}
 		}
 
@@ -2206,54 +2227,10 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 		}
 	}
 
-	$.plot = function(target, data, options) {
-		var plot = new Plot(target, data, options);
-		/*var t0 = new Date();	 
-		var t1 = new Date();
-		var tstr = "time used (msecs): " + (t1.getTime() - t0.getTime())
-		if (window.console)
-			console.log(tstr);
-		else
-			alert(tstr);*/
-		return plot;
-	};
+	L.augment(Plot, YAHOO.util.EventProvider);
 
-	// returns a string with the date d formatted according to fmt
-	$.plot.formatDate = function(d, fmt, monthNames) {
-		var leftPad = function(n) {
-			n = "" + n;
-			return n.length == 1 ? "0" + n : n;
-		};
-
-		var r = [];
-		var escape = false;
-		if (monthNames == null)
-			monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-		for (var i = 0; i < fmt.length; ++i) {
-			var c = fmt.charAt(i);
-
-			if (escape) {
-				switch (c) {
-				case 'h': c = "" + d.getUTCHours(); break;
-				case 'H': c = leftPad(d.getUTCHours()); break;
-				case 'M': c = leftPad(d.getUTCMinutes()); break;
-				case 'S': c = leftPad(d.getUTCSeconds()); break;
-				case 'd': c = "" + d.getUTCDate(); break;
-				case 'm': c = "" + (d.getUTCMonth() + 1); break;
-				case 'y': c = "" + d.getUTCFullYear(); break;
-				case 'b': c = "" + monthNames[d.getUTCMonth()]; break;
-				}
-				r.push(c);
-				escape = false;
-			}
-			else {
-				if (c == "%")
-					escape = true;
-				else
-					r.push(c);
-			}
-		}
-		return r.join("");
+	YAHOO.widget.Flot = function(target, data, options) {
+		return new Plot(target, data, options);
 	};
 
 	// round to nearby lower multiple of base
@@ -2375,13 +2352,13 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 	function extractColor(element) {
 		var color, elem = element;
 		do {
-			color = elem.css("background-color").toLowerCase();
+			color = DOM.getStyle(elem, 'backgroundColor').toLowerCase();
 			// keep going until we find an element that has color, or
 			// we hit the body
 			if (color != '' && color != 'transparent')
 				break;
-			elem = elem.parent();
-		} while (!$.nodeName(elem.get(0), "body"));
+			elem = elem.parentNode;
+		} while (!elem.nodeName == "body");
 
 		// catch Safari's way of signalling transparent
 		if (color == "rgba(0, 0, 0, 0)")
@@ -2419,7 +2396,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 			return new Color(parseInt(result[1]+result[1], 16), parseInt(result[2]+result[2], 16), parseInt(result[3]+result[3], 16));
 
 		// Otherwise, we're most likely dealing with a named color
-		var name = $.trim(str).toLowerCase();
+		var name = L.trim(str).toLowerCase();
 		if (name == "transparent")
 			return new Color(255, 255, 255, 0);
 		else {
@@ -2428,4 +2405,4 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 		}
 	}
 
-})(jQuery);
+})();
