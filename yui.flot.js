@@ -20,7 +20,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 		//   [ series1, series2 ... ]
 		// where series is either just the data as [ [x1, y1], [x2, y2], ... ]
 		// or { data: [ [x1, y1], [x2, y2], ... ], label: "some label" }
-		
+
 		var series = [],
 			options = {
 				// the color theme used for graphs
@@ -45,7 +45,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 					tickFormatter: null, // fn: number -> string
 					labelWidth: null, // size of tick labels in pixels
 					labelHeight: null,
-					
+
 					// mode specific options
 					tickDecimals: null, // no. of decimals, null means auto
 					tickSize: null, // number or [number, "unit"]
@@ -124,7 +124,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 		plotWidth = 0, plotHeight = 0,
 		// dedicated to storing data for buggy standard compliance cases
 		workarounds = {};
-		
+
 		this.setData = setData;
 		this.setupGrid = setupGrid;
 		this.draw = draw;
@@ -138,7 +138,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 		this.clearCrosshair = function () { setCrosshair(null); };
 		this.highlight = highlight;
 		this.unhighlight = unhighlight;
-		
+
 		// initialize
 		parseOptions(options_);
 		setData(data_);
@@ -153,7 +153,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 			fillInSeriesOptions();
 			processData();
 		}
-		
+
 		function parseData(d) {
 			var res = [];
 			for (var i = 0; i < d.length; ++i) {
@@ -171,7 +171,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 
 			return res;
 		}
-		
+
 		function parseOptions(o) {
 			$.extend(true, options, o);
 			if (options.grid.borderColor == null)
@@ -189,7 +189,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 
 		function fillInSeriesOptions() {
 			var i;
-			
+
 			// collect what we already got of colors
 			var neededColors = series.length,
 				usedColors = [],
@@ -204,7 +204,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 						usedColors.push(parseColor(series[i].color));
 				}
 			}
-			
+
 			// we might need to generate more colors if higher indices
 			// are assigned
 			for (i = 0; i < assignedColors.length; ++i) {
@@ -229,7 +229,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 				// FIXME: if we're getting to close to something else,
 				// we should probably skip this one
 				colors.push(c);
-				
+
 				++i;
 				if (i >= options.colors.length) {
 					i = 0;
@@ -282,7 +282,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 				s.subseries = null;
 			}
 		}
-		
+
 		function processData() {
 			var topSentry = Number.POSITIVE_INFINITY,
 				bottomSentry = Number.NEGATIVE_INFINITY,
@@ -295,11 +295,11 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 				axes[axis].max = options[axis].max;
 				axes[axis].used = false;
 			}
-			
+
 			for (i = 0; i < series.length; ++i) {
 				s = series[i];
 				s.datapoints = { points: [], incr: 2 };
-				
+
 				var data = s.data,
 					points = s.datapoints.points,
 					axisx = s.xaxis, axisy = s.yaxis,
@@ -317,11 +317,11 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 				// examine data to find out how to copy
 				for (j = 0; j < data.length; ++j) {
 				}*/
-				
-				
+
+
 				axisx.used = axisy.used = true;
 				incr = s.datapoints.incr;
-				
+
 				for (j = k = 0; j < data.length; ++j, k += incr) {
 					p = data[j];
 					x = null;
@@ -331,7 +331,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 						x = p[0];
 						y = p[1];
 					}
-					
+
 					// convert to number
 					if (x != null && !isNaN(x = +x)) {
 						if (x < xmin)
@@ -341,7 +341,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 					}
 					else
 						x = null;
-					
+
 					if (y != null && !isNaN(y = +y)) {
 						if (y < ymin)
 							ymin = y;
@@ -373,13 +373,13 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 						xmax += delta + s.bars.barWidth;
 					}
 				}
-				
+
 				axisx.datamin = Math.min(axisx.datamin, xmin);
 				axisx.datamax = Math.max(axisx.datamax, xmax);
 				axisy.datamin = Math.min(axisy.datamin, ymin);
 				axisy.datamax = Math.max(axisy.datamax, ymax);
 
-				
+
 				// step charts
 				if (s.lines.show && s.lines.steps) {
 					p = [];
@@ -395,7 +395,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 							p[k + 1] = points[j - incr + 1];
 							k += incr;
 						}
-						
+
 						p[k] = x;
 						p[k + 1] = y;
 					}
@@ -407,7 +407,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 					var orig = $.extend({}, s), thresholded = $.extend({}, s);
 					orig.datapoints = { points: [], incr: incr };
 					thresholded.datapoints = { points: [], incr: incr };
-					
+
 					thresholded.color = s.threshold.color;
 
 					var below = s.threshold.below,
@@ -431,11 +431,11 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 					// possibly split lines
 					if (s.lines.show) {
 						var lp = s.datapoints.linespoints || points;
-						
+
 						origpoints = [];
 						threspoints = [];
 						p = origpoints;
-						
+
 						for (j = 0; j < lp.length; j += incr) {
 							x = lp[j];
 							y = lp[j + 1];
@@ -458,7 +458,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 								p.push(k);
 								p.push(below);
 							}
-							
+
 							p.push(x);
 							p.push(y);
 						}
@@ -481,7 +481,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 					c = window.G_vmlCanvasManager.initElement(c);
 				return c;
 			}
-			
+
 			canvasWidth = target.width();
 			canvasHeight = target.height();
 			target.html(""); // clear target
@@ -517,7 +517,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 
 			if (options.crosshair.mode != null)
 				eventHolder.mouseout(onMouseOut);
-			
+
 			if (options.grid.clickable)
 				eventHolder.click(onClick);
 		}
@@ -547,7 +547,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 			insertLabels();
 			insertLegend();
 		}
-		
+
 		function setRange(axis, axisOptions) {
 			var min = axisOptions.min != null ? +axisOptions.min : axis.datamin,
 				max = axisOptions.max != null ? +axisOptions.max : axis.datamax;
@@ -557,7 +557,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 				min = 0;
 			if (max == Number.NEGATIVE_INFINITY)
 				max = 1;
-			
+
 			if (max - min == 0.0) {
 				// degenerate case
 				var widen = max == 0 ? 1 : 0.01;
@@ -600,13 +600,13 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 				noTicks = canvasWidth / 100;
 			else
 				noTicks = canvasHeight / 60;
-			
+
 			var delta = (axis.max - axis.min) / noTicks;
 			var size, generator, unit, formatter, i, magn, norm;
 
 			if (axisOptions.mode == "time") {
 				// pretty handling of time
-				
+
 				// map of app. size of time units in milliseconds
 				var timeUnitSize = {
 					"second": 1000,
@@ -648,7 +648,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 						break;
 				size = spec[i][0];
 				unit = spec[i][1];
-				
+
 				// special-case the possibility of several years
 				if (unit == "year") {
 					magn = Math.pow(10, Math.floor(Math.log(delta / timeUnitSize.year) / Math.LN10));
@@ -669,12 +669,12 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 					size = axisOptions.tickSize[0];
 					unit = axisOptions.tickSize[1];
 				}
-				
+
 				generator = function(axis) {
 					var ticks = [],
 						tickSize = axis.tickSize[0], unit = axis.tickSize[1],
 						d = new Date(axis.min);
-					
+
 					var step = tickSize * timeUnitSize[unit];
 
 					if (unit == "second")
@@ -687,7 +687,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 						d.setUTCMonth(floorInBase(d.getUTCMonth(), tickSize));
 					if (unit == "year")
 						d.setUTCFullYear(floorInBase(d.getUTCFullYear(), tickSize));
-					
+
 					// reset smaller components
 					d.setUTCMilliseconds(0);
 					if (step >= timeUnitSize.minute)
@@ -739,10 +739,10 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 					// first check global format
 					if (axisOptions.timeformat != null)
 						return $.plot.formatDate(d, axisOptions.timeformat, axisOptions.monthNames);
-					
+
 					var t = axis.tickSize[0] * timeUnitSize[axis.tickSize[1]];
 					var span = axis.max - axis.min;
-					
+
 					if (t < timeUnitSize.minute)
 						fmt = "%h:%M:%S";
 					else if (t < timeUnitSize.day) {
@@ -761,7 +761,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 					}
 					else
 						fmt = "%y";
-					
+
 					return $.plot.formatDate(d, fmt, axisOptions.monthNames);
 				};
 			}
@@ -771,10 +771,10 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 				var dec = -Math.floor(Math.log(delta) / Math.LN10);
 				if (maxDec != null && dec > maxDec)
 					dec = maxDec;
-				
+
 				magn = Math.pow(10, -dec);
 				norm = delta / magn; // norm is between 1.0 and 10.0
-				
+
 				if (norm < 1.5)
 					size = 1;
 				else if (norm < 3) {
@@ -791,15 +791,15 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 					size = 10;
 
 				size *= magn;
-				
+
 				if (axisOptions.minTickSize != null && size < axisOptions.minTickSize)
 					size = axisOptions.minTickSize;
 
 				if (axisOptions.tickSize != null)
 					size = axisOptions.tickSize;
-				
+
 				axis.tickDecimals = Math.max(0, (maxDec != null) ? maxDec : dec);
-				
+
 				generator = function (axis) {
 					var ticks = [];
 
@@ -831,13 +831,13 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 			if (axisOptions.labelHeight != null)
 				axis.labelHeight = axisOptions.labelHeight;
 		}
-		
+
 		function setTicks(axis, axisOptions) {
 			axis.ticks = [];
 
 			if (!axis.used)
 				return;
-			
+
 			if (axisOptions.ticks == null)
 				axis.ticks = axis.tickGenerator(axis);
 			else if (typeof axisOptions.ticks == "number") {
@@ -850,7 +850,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 				if ($.isFunction(ticks))
 					// generate the ticks
 					ticks = ticks({ min: axis.min, max: axis.max });
-				
+
 				// clean up the user-supplied ticks, copy them over
 				var i, v;
 				for (i = 0; i < ticks.length; ++i) {
@@ -877,7 +877,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 					axis.max = Math.min(axis.max, axis.ticks[axis.ticks.length - 1].v);
 			}
 		}
-		
+
 		function setSpacing() {
 			function measureXLabels(axis) {
 				// to avoid measuring the widths of the labels, we
@@ -895,7 +895,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 						if (l)
 							labels.push('<div class="tickLabel" style="float:left;width:' + axis.labelWidth + 'px">' + l + '</div>');
 					}
-					
+
 					axis.labelHeight = 0;
 					if (labels.length > 0) {
 						var dummyDiv = $('<div style="position:absolute;top:-10000px;width:10000px;font-size:smaller">'
@@ -905,7 +905,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 					}
 				}
 			}
-			
+
 			function measureYLabels(axis) {
 				if (axis.labelWidth == null || axis.labelHeight == null) {
 					var i, labels = [], l;
@@ -915,7 +915,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 						if (l)
 							labels.push('<div class="tickLabel">' + l + '</div>');
 					}
-					
+
 					if (labels.length > 0) {
 						var dummyDiv = $('<div style="position:absolute;top:-10000px;font-size:smaller">'
 										 + labels.join("") + '</div>').appendTo(target);
@@ -925,14 +925,14 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 							axis.labelHeight = dummyDiv.find("div").height();
 						dummyDiv.remove();
 					}
-					
+
 					if (axis.labelWidth == null)
 						axis.labelWidth = 0;
 					if (axis.labelHeight == null)
 						axis.labelHeight = 0;
 				}
 			}
-			
+
 			measureXLabels(axes.xaxis);
 			measureYLabels(axes.yaxis);
 			measureXLabels(axes.x2axis);
@@ -947,7 +947,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 			plotOffset.left = plotOffset.right = plotOffset.top = plotOffset.bottom = maxOutset;
 
 			var margin = options.grid.labelMargin + options.grid.borderWidth;
-			
+
 			if (axes.xaxis.labelHeight > 0)
 				plotOffset.bottom = Math.max(maxOutset, axes.xaxis.labelHeight + margin);
 			if (axes.yaxis.labelWidth > 0)
@@ -955,7 +955,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 
 			if (axes.x2axis.labelHeight > 0)
 				plotOffset.top = Math.max(maxOutset, axes.x2axis.labelHeight + margin);
-			
+
 			if (axes.y2axis.labelWidth > 0)
 				plotOffset.right = Math.max(maxOutset, axes.y2axis.labelWidth + margin);
 
@@ -968,7 +968,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 			axes.x2axis.scale = plotWidth / (axes.x2axis.max - axes.x2axis.min);
 			axes.y2axis.scale = plotHeight / (axes.y2axis.max - axes.y2axis.min);
 		}
-		
+
 		function draw() {
 			drawGrid();
 			for (var i = 0; i < series.length; ++i) {
@@ -1006,13 +1006,13 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 			// auto-reverse as an added bonus
 			if (from != null && to != null && from > to)
 				return { from: to, to: from, axis: axis };
-			
+
 			return { from: from, to: to, axis: axis };
 		}
-		
+
 		function drawGrid() {
 			var i;
-			
+
 			ctx.save();
 			ctx.clearRect(0, 0, canvasWidth, canvasHeight);
 			ctx.translate(plotOffset.left, plotOffset.top);
@@ -1063,7 +1063,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 					xrange.to = xrange.axis.p2c(xrange.to);
 					yrange.from = yrange.axis.p2c(yrange.from);
 					yrange.to = yrange.axis.p2c(yrange.to);
-					
+
 					if (xrange.from == xrange.to || yrange.from == yrange.to) {
 						// draw line
 						ctx.strokeStyle = m.color || options.grid.markingsColor;
@@ -1084,7 +1084,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 					}
 				}
 			}
-			
+
 			// draw the inner grid
 			ctx.lineWidth = 1;
 			ctx.strokeStyle = options.grid.tickColor;
@@ -1114,7 +1114,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 				v = axis.ticks[i].v;
 				if (v <= axis.min || v >= axis.max)
 					continue;
-	
+
 				ctx.moveTo(Math.floor(axis.p2c(v)) + ctx.lineWidth/2, -5);
 				ctx.lineTo(Math.floor(axis.p2c(v)) + ctx.lineWidth/2, 5);
 			}
@@ -1128,9 +1128,9 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 				ctx.moveTo(plotWidth-5, Math.floor(axis.p2c(v)) + ctx.lineWidth/2);
 				ctx.lineTo(plotWidth+5, Math.floor(axis.p2c(v)) + ctx.lineWidth/2);
 			}
-			
+
 			ctx.stroke();
-			
+
 			if (options.grid.borderWidth) {
 				// draw border
 				var bw = options.grid.borderWidth;
@@ -1141,10 +1141,10 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 
 			ctx.restore();
 		}
-		
+
 		function insertLabels() {
 			target.find(".tickLabels").remove();
-			
+
 			var html = ['<div class="tickLabels" style="font-size:smaller;color:' + options.grid.color + '">'];
 
 			function addLabels(axis, labelGenerator) {
@@ -1157,26 +1157,26 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 			}
 
 			var margin = options.grid.labelMargin + options.grid.borderWidth;
-			
+
 			addLabels(axes.xaxis, function (tick, axis) {
 				return '<div style="position:absolute;top:' + (plotOffset.top + plotHeight + margin) + 'px;left:' + Math.round(plotOffset.left + axis.p2c(tick.v) - axis.labelWidth/2) + 'px;width:' + axis.labelWidth + 'px;text-align:center" class="tickLabel">' + tick.label + "</div>";
 			});
-			
-			
+
+
 			addLabels(axes.yaxis, function (tick, axis) {
 				return '<div style="position:absolute;top:' + Math.round(plotOffset.top + axis.p2c(tick.v) - axis.labelHeight/2) + 'px;right:' + (plotOffset.right + plotWidth + margin) + 'px;width:' + axis.labelWidth + 'px;text-align:right" class="tickLabel">' + tick.label + "</div>";
 			});
-			
+
 			addLabels(axes.x2axis, function (tick, axis) {
 				return '<div style="position:absolute;bottom:' + (plotOffset.bottom + plotHeight + margin) + 'px;left:' + Math.round(plotOffset.left + axis.p2c(tick.v) - axis.labelWidth/2) + 'px;width:' + axis.labelWidth + 'px;text-align:center" class="tickLabel">' + tick.label + "</div>";
 			});
-			
+
 			addLabels(axes.y2axis, function (tick, axis) {
 				return '<div style="position:absolute;top:' + Math.round(plotOffset.top + axis.p2c(tick.v) - axis.labelHeight/2) + 'px;left:' + (plotOffset.left + plotWidth + margin) +'px;width:' + axis.labelWidth + 'px;text-align:left" class="tickLabel">' + tick.label + "</div>";
 			});
 
 			html.push('</div>');
-			
+
 			target.append(html.join(""));
 		}
 
@@ -1188,18 +1188,18 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 			if (series.points.show)
 				drawSeriesPoints(series);
 		}
-		
+
 		function drawSeriesLines(series) {
 			function plotLine(datapoints, xoffset, yoffset, axisx, axisy) {
 				var points = datapoints.linespoints || datapoints.points,
 					incr = datapoints.incr,
 					prevx = null, prevy = null;
-				
+
 				ctx.beginPath();
 				for (var i = incr; i < points.length; i += incr) {
 					var x1 = points[i - incr], y1 = points[i - incr + 1],
 						x2 = points[i], y2 = points[i + 1];
-					
+
 					if (x1 == null || x2 == null)
 						continue;
 
@@ -1262,7 +1262,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 
 					if (x1 != prevx || y1 != prevy)
 						ctx.moveTo(axisx.p2c(x1) + xoffset, axisy.p2c(y1) + yoffset);
-					
+
 					prevx = x2;
 					prevy = y2;
 					ctx.lineTo(axisx.p2c(x2) + xoffset, axisy.p2c(y2) + yoffset);
@@ -1275,11 +1275,11 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 					incr = datapoints.incr,
 					bottom = Math.min(Math.max(0, axisy.min), axisy.max),
 					top, lastX = 0, areaOpen = false;
-				
+
 				for (var i = incr; i < points.length; i += incr) {
 					var x1 = points[i - incr], y1 = points[i - incr + 1],
 						x2 = points[i], y2 = points[i + 1];
-					
+
 					if (areaOpen && x1 != null && x2 == null) {
 						// close area
 						ctx.lineTo(axisx.p2c(lastX), axisy.p2c(bottom));
@@ -1292,7 +1292,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 						continue;
 
 					// clip x values
-					
+
 					// clip with xmin
 					if (x1 <= x2 && x1 < axisx.min) {
 						if (x2 < axisx.min)
@@ -1327,7 +1327,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 						ctx.moveTo(axisx.p2c(x1), axisy.p2c(bottom));
 						areaOpen = true;
 					}
-					
+
 					// now first check the case where both is outside
 					if (y1 >= axisy.max && y2 >= axisy.max) {
 						ctx.lineTo(axisx.p2c(x1), axisy.p2c(axisy.max));
@@ -1341,14 +1341,14 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 						lastX = x2;
 						continue;
 					}
-					
+
 					// else it's a bit more complicated, there might
 					// be two rectangles and two triangles we need to fill
 					// in; to find these keep track of the current x values
 					var x1old = x1, x2old = x2;
 
 					// and clip the y values, without shortcutting
-					
+
 					// clip with ymin
 					if (y1 <= y2 && y1 < axisy.min && y2 >= axisy.min) {
 						x1 = (axisy.min - y1) / (y2 - y1) * (x2 - x1) + x1;
@@ -1377,11 +1377,11 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 							top = axisy.min;
 						else
 							top = axisy.max;
-						
+
 						ctx.lineTo(axisx.p2c(x1old), axisy.p2c(top));
 						ctx.lineTo(axisx.p2c(x1), axisy.p2c(top));
 					}
-					
+
 					// fill the triangles
 					ctx.lineTo(axisx.p2c(x1), axisy.p2c(y1));
 					ctx.lineTo(axisx.p2c(x2), axisy.p2c(y2));
@@ -1392,7 +1392,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 							top = axisy.min;
 						else
 							top = axisy.max;
-						
+
 						ctx.lineTo(axisx.p2c(x2), axisy.p2c(top));
 						ctx.lineTo(axisx.p2c(x2old), axisy.p2c(top));
 					}
@@ -1405,7 +1405,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 					ctx.fill();
 				}
 			}
-			
+
 			ctx.save();
 			ctx.translate(plotOffset.left, plotOffset.top);
 			ctx.lineJoin = "round";
@@ -1439,12 +1439,12 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 		function drawSeriesPoints(series) {
 			function plotPoints(datapoints, radius, fillStyle, offset, circumference, axisx, axisy) {
 				var points = datapoints.points, incr = datapoints.incr;
-				
+
 				for (var i = 0; i < points.length; i += incr) {
 					var x = points[i], y = points[i + 1];
 					if (x == null || x < axisx.min || x > axisx.max || y < axisy.min || y > axisy.max)
 						continue;
-					
+
 					ctx.beginPath();
 					ctx.arc(axisx.p2c(x), axisy.p2c(y) + offset, radius, 0, circumference, true);
 					if (fillStyle) {
@@ -1454,7 +1454,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 					ctx.stroke();
 				}
 			}
-			
+
 			ctx.save();
 			ctx.translate(plotOffset.left, plotOffset.top);
 
@@ -1526,7 +1526,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 			if (right < axisx.min || left > axisx.max ||
 				top < axisy.min || bottom > axisy.max)
 				return;
-			
+
 			if (left < axisx.min) {
 				left = axisx.min;
 				drawLeft = false;
@@ -1541,7 +1541,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 				bottom = axisy.min;
 				drawBottom = false;
 			}
-			
+
 			if (top > axisy.max) {
 				top = axisy.max;
 				drawTop = false;
@@ -1551,7 +1551,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 			bottom = axisy.p2c(bottom);
 			right = axisx.p2c(right);
 			top = axisy.p2c(top);
-			
+
 			// fill the bar
 			if (fillStyleCallback) {
 				c.beginPath();
@@ -1588,11 +1588,11 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 				c.stroke();
 			}
 		}
-		
+
 		function drawSeriesBars(series) {
 			function plotBars(datapoints, barLeft, barRight, offset, fillStyleCallback, axisx, axisy) {
 				var points = datapoints.points, incr = datapoints.incr;
-				
+
 				for (var i = 0; i < points.length; i += incr) {
 					if (points[i] == null)
 						continue;
@@ -1619,19 +1619,19 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 
 			if (filloptions.fillColor)
 				return getColorOrGradient(filloptions.fillColor, bottom, top, seriesColor);
-			
+
 			var c = parseColor(seriesColor);
 			c.a = typeof fill == "number" ? fill : 0.4;
 			c.normalize();
 			return c.toString();
 		}
-		
+
 		function insertLegend() {
 			target.find(".legend").remove();
 
 			if (!options.legend.show)
 				return;
-			
+
 			var fragments = [], rowStarted = false,
 				lf = options.legend.labelFormatter, s, label;
 			for (i = 0; i < series.length; ++i) {
@@ -1639,7 +1639,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 				label = s.label;
 				if (!label)
 					continue;
-				
+
 				if (i % options.legend.noColumns == 0) {
 					if (rowStarted)
 						fragments.push('</tr>');
@@ -1649,14 +1649,14 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 
 				if (lf)
 					label = lf(label, s);
-				
+
 				fragments.push(
 					'<td class="legendColorBox"><div style="border:1px solid ' + options.legend.labelBoxBorderColor + ';padding:1px"><div style="width:4px;height:0;border:5px solid ' + s.color + ';overflow:hidden"></div></div></td>' +
 					'<td class="legendLabel">' + label + '</td>');
 			}
 			if (rowStarted)
 				fragments.push('</tr>');
-			
+
 			if (fragments.length == 0)
 				return;
 
@@ -1699,7 +1699,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 
 
 		// interactive features
-		
+
 		var lastMousePos = { pageX: null, pageY: null },
 			selection = {
 				first: { x: -1, y: -1}, second: { x: -1, y: -1},
@@ -1709,7 +1709,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 			clickIsMouseUp = false,
 			redrawTimeout = null,
 			hoverTimeout = null;
-		
+
 		// Returns the data item the mouse is over, or null if none is found
 		function findNearbyItem(mouseX, mouseY, seriesFilter) {
 			var maxDistance = options.grid.mouseActiveRadius,
@@ -1719,7 +1719,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 			for (var i = 0; i < series.length; ++i) {
 				if (!seriesFilter(series[i]))
 					continue;
-				
+
 				var s = series[i],
 					axisx = s.xaxis,
 					axisy = s.yaxis,
@@ -1735,7 +1735,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 						var x = points[j], y = points[j + 1];
 						if (x == null)
 							continue;
-						
+
 						// For points and lines, the cursor must be within a
 						// certain distance to the data point
 						if (x - mx > maxx || x - mx < -maxx ||
@@ -1753,11 +1753,11 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 						}
 					}
 				}
-					
+
 				if (s.bars.show && !item) { // no other point can be nearby
 					var barLeft = s.bars.align == "left" ? 0 : -s.bars.barWidth/2,
 						barRight = barLeft + s.bars.barWidth;
-					
+
 					for (j = 0; j < points.length; j += incr) {
 						var x = points[j], y = points[j + 1], b = points[j + 2];
 						if (x == null)
@@ -1777,13 +1777,13 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 			if (item) {
 				i = item[0];
 				j = item[1];
-				
+
 				return { datapoint: series[i].data[j],
 						 dataIndex: j,
 						 series: series[i],
 						 seriesIndex: i }
 			}
-			
+
 			return null;
 		}
 
@@ -1799,7 +1799,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 				lastMousePos.pageX = e.pageX;
 				lastMousePos.pageY = e.pageY;
 			}
-			
+
 			if (options.grid.hoverable)
 				triggerClickHoverEvent("plothover", lastMousePos,
 									   function (s) { return s["hoverable"] != false; });
@@ -1819,11 +1819,11 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 				updateSelection(lastMousePos);
 			}
 		}
-		
+
 		function onMouseDown(e) {
 			if (e.which != 1)  // only accept left-click
 				return;
-			
+
 			// cancel out any text selections
 			document.body.focus();
 
@@ -1836,9 +1836,9 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 				workarounds.ondrag = document.ondrag;
 				document.ondrag = function () { return false; };
 			}
-			
+
 			setSelectionPos(selection.first, e);
-				
+
 			lastMousePos.pageX = null;
 			selection.active = true;
 			$(document).one("mouseup", onSelectionMouseUp);
@@ -1850,7 +1850,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 				triggerRedrawOverlay();
 			}
 		}
-		
+
 		function onClick(e) {
 			if (clickIsMouseUp) {
 				clickIsMouseUp = false;
@@ -1866,13 +1866,13 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 			return { x: parseInt(pos.x != null ? axes.xaxis.p2c(pos.x) : axes.x2axis.p2c(pos.x2)),
 					 y: parseInt(pos.y != null ? axes.yaxis.p2c(pos.y) : axes.y2axis.p2c(pos.y2)) };
 		}
-		
+
 		function positionInDivSpace(pos) {
 			var cpos = userPositionInCanvasSpace(pos);
 			return { x: cpos.x + plotOffset.left,
 					 y: cpos.y + plotOffset.top };
 		}*/
-		
+
 		// trigger click or hover event (they send the same parameters
 		// so we share their code)
 		function triggerClickHoverEvent(eventname, event, seriesFilter) {
@@ -1906,11 +1906,11 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 						!(item && h.series == item.series && h.point == item.datapoint))
 						unhighlight(h.series, h.point);
 				}
-				
+
 				if (item)
 					highlight(item.series, item.datapoint, eventname);
 			}
-			
+
 			target.trigger(eventname, [ pos, item ]);
 		}
 
@@ -1926,7 +1926,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 			octx.save();
 			octx.clearRect(0, 0, canvasWidth, canvasHeight);
 			octx.translate(plotOffset.left, plotOffset.top);
-			
+
 			var i, hi;
 			for (i = 0; i < highlights.length; ++i) {
 				hi = highlights[i];
@@ -1943,12 +1943,12 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 				octx.lineWidth = 1;
 				ctx.lineJoin = "round";
 				octx.fillStyle = parseColor(options.selection.color).scale(null, null, null, 0.4).toString();
-				
+
 				var x = Math.min(selection.first.x, selection.second.x),
 					y = Math.min(selection.first.y, selection.second.y),
 					w = Math.abs(selection.second.x - selection.first.x),
 					h = Math.abs(selection.second.y - selection.first.y);
-				
+
 				octx.fillRect(x, y, w, h);
 				octx.strokeRect(x, y, w, h);
 			}
@@ -1970,11 +1970,11 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 					octx.lineTo(plotWidth, pos.y);
 				}
 				octx.stroke();
-				
+
 			}
 			octx.restore();
 		}
-		
+
 		function highlight(s, point, auto) {
 			if (typeof s == "number")
 				s = series[s];
@@ -1991,7 +1991,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 			else if (!auto)
 				highlights[i].auto = false;
 		}
-			
+
 		function unhighlight(s, point) {
 			if (typeof s == "number")
 				s = series[s];
@@ -2006,7 +2006,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 				triggerRedrawOverlay();
 			}
 		}
-		
+
 		function indexOfHighlight(s, p) {
 			for (var i = 0; i < highlights.length; ++i) {
 				var h = highlights[i];
@@ -2016,14 +2016,14 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 			}
 			return -1;
 		}
-		
+
 		function drawPointHighlight(series, point) {
 			var x = point[0], y = point[1],
 				axisx = series.xaxis, axisy = series.yaxis;
-			
+
 			if (x < axisx.min || x > axisx.max || y < axisy.min || y > axisy.max)
 				return;
-			
+
 			var pointRadius = series.points.radius + series.points.lineWidth / 2;
 			octx.lineWidth = pointRadius;
 			octx.strokeStyle = parseColor(series.color).scale(1, 1, 1, 0.5).toString();
@@ -2075,28 +2075,28 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 				r.y2axis = { from: axes.y2axis.c2p(y1), to: axes.y2axis.c2p(y2) };
 			return r;
 		}
-		
+
 		function triggerSelectedEvent() {
 			var r = getSelectionForEvent();
-			
+
 			target.trigger("plotselected", [ r ]);
 
 			// backwards-compat stuff, to be removed in future
 			if (axes.xaxis.used && axes.yaxis.used)
 				target.trigger("selected", [ { x1: r.xaxis.from, y1: r.yaxis.from, x2: r.xaxis.to, y2: r.yaxis.to } ]);
 		}
-		
+
 		function onSelectionMouseUp(e) {
 			// revert drag stuff for old-school browsers
 			if (document.onselectstart !== undefined)
 				document.onselectstart = workarounds.onselectstart;
 			if (document.ondrag !== undefined)
 				document.ondrag = workarounds.ondrag;
-			
+
 			// no more draggy-dee-drag
 			selection.active = false;
 			updateSelection(e);
-			
+
 			if (selectionIsSane()) {
 				triggerSelectedEvent();
 				clickIsMouseUp = true;
@@ -2106,13 +2106,13 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 				target.trigger("plotunselected", [ ]);
 				target.trigger("plotselecting", [ null ]);
 			}
-			
+
 			return false;
 		}
 
 		function setSelectionPos(pos, e) {
 			setPositionFromEvent(pos, e);
-			
+
 			if (options.selection.mode == "y") {
 				if (pos == selection.first)
 					pos.x = 0;
@@ -2152,25 +2152,25 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 
 		function setSelection(ranges, preventEvent) {
 			var range;
-			
+
 			if (options.selection.mode == "y") {
 				selection.first.x = 0;
 				selection.second.x = plotWidth;
 			}
 			else {
 				range = extractRange(ranges, "x");
-				
+
 				selection.first.x = range.axis.p2c(range.from);
 				selection.second.x = range.axis.p2c(range.to);
 			}
-			
+
 			if (options.selection.mode == "x") {
 				selection.first.y = 0;
 				selection.second.y = plotHeight;
 			}
 			else {
 				range = extractRange(ranges, "y");
-				
+
 				selection.first.y = range.axis.p2c(range.from);
 				selection.second.y = range.axis.p2c(range.to);
 			}
@@ -2180,13 +2180,13 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 			if (!preventEvent)
 				triggerSelectedEvent();
 		}
-		
+
 		function selectionIsSane() {
 			var minSize = 5;
 			return Math.abs(selection.second.x - selection.first.x) >= minSize &&
 				Math.abs(selection.second.y - selection.first.y) >= minSize;
 		}
-		
+
 		function getColorOrGradient(spec, bottom, top, defaultColor) {
 			if (typeof spec == "string")
 				return spec;
@@ -2195,17 +2195,17 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 				// supports a simple vertical gradient properly, so that's
 				// what we support too
 				var gradient = ctx.createLinearGradient(0, top, 0, bottom);
-				
+
 				for (var i = 0, l = spec.colors.length; i < l; ++i) {
 					var c = spec.colors[i];
 					gradient.addColorStop(i / (l - 1), typeof c == "string" ? c : parseColor(defaultColor).scale(c.brightness, c.brightness, c.brightness, c.opacity));
 				}
-				
+
 				return gradient;
 			}
 		}
 	}
-	
+
 	$.plot = function(target, data, options) {
 		var plot = new Plot(target, data, options);
 		/*var t0 = new Date();	 
@@ -2224,14 +2224,14 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 			n = "" + n;
 			return n.length == 1 ? "0" + n : n;
 		};
-		
+
 		var r = [];
 		var escape = false;
 		if (monthNames == null)
 			monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 		for (var i = 0; i < fmt.length; ++i) {
 			var c = fmt.charAt(i);
-			
+
 			if (escape) {
 				switch (c) {
 				case 'h': c = "" + d.getUTCHours(); break;
@@ -2255,12 +2255,12 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 		}
 		return r.join("");
 	};
-	
+
 	// round to nearby lower multiple of base
 	function floorInBase(n, base) {
 		return base * Math.floor(n / base);
 	}
-	
+
 	function clamp(min, value, max) {
 		if (value < min)
 			return min;
@@ -2269,7 +2269,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 		else
 			return value;
 	}
-	
+
 	// color helpers, inspiration from the jquery color animation
 	// plugin by John Resig
 	function Color (r, g, b, a) {
@@ -2325,7 +2325,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 
 		this.normalize();
 	}
-	
+
 	var lookupColors = {
 		aqua:[0,255,255],
 		azure:[240,255,255],
@@ -2370,7 +2370,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 		silver:[192,192,192],
 		white:[255,255,255],
 		yellow:[255,255,0]
-	};	
+	};
 
 	function extractColor(element) {
 		var color, elem = element;
@@ -2386,10 +2386,10 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 		// catch Safari's way of signalling transparent
 		if (color == "rgba(0, 0, 0, 0)")
 			return "transparent";
-		
+
 		return color;
 	}
-	
+
 	// parse string, returns Color
 	function parseColor(str) {
 		var result;
@@ -2397,11 +2397,11 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 		// Look for rgb(num,num,num)
 		if (result = /rgb\(\s*([0-9]{1,3})\s*,\s*([0-9]{1,3})\s*,\s*([0-9]{1,3})\s*\)/.exec(str))
 			return new Color(parseInt(result[1], 10), parseInt(result[2], 10), parseInt(result[3], 10));
-		
+
 		// Look for rgba(num,num,num,num)
 		if (result = /rgba\(\s*([0-9]{1,3})\s*,\s*([0-9]{1,3})\s*,\s*([0-9]{1,3})\s*,\s*([0-9]+(?:\.[0-9]+)?)\s*\)/.exec(str))
 			return new Color(parseInt(result[1], 10), parseInt(result[2], 10), parseInt(result[3], 10), parseFloat(result[4]));
-			
+
 		// Look for rgb(num%,num%,num%)
 		if (result = /rgb\(\s*([0-9]+(?:\.[0-9]+)?)\%\s*,\s*([0-9]+(?:\.[0-9]+)?)\%\s*,\s*([0-9]+(?:\.[0-9]+)?)\%\s*\)/.exec(str))
 			return new Color(parseFloat(result[1])*2.55, parseFloat(result[2])*2.55, parseFloat(result[3])*2.55);
@@ -2409,7 +2409,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 		// Look for rgba(num%,num%,num%,num)
 		if (result = /rgba\(\s*([0-9]+(?:\.[0-9]+)?)\%\s*,\s*([0-9]+(?:\.[0-9]+)?)\%\s*,\s*([0-9]+(?:\.[0-9]+)?)\%\s*,\s*([0-9]+(?:\.[0-9]+)?)\s*\)/.exec(str))
 			return new Color(parseFloat(result[1])*2.55, parseFloat(result[2])*2.55, parseFloat(result[3])*2.55, parseFloat(result[4]));
-		
+
 		// Look for #a0b1c2
 		if (result = /#([a-fA-F0-9]{2})([a-fA-F0-9]{2})([a-fA-F0-9]{2})/.exec(str))
 			return new Color(parseInt(result[1], 16), parseInt(result[2], 16), parseInt(result[3], 16));
@@ -2427,5 +2427,5 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 			return new Color(result[0], result[1], result[2]);
 		}
 	}
-		
+
 })(jQuery);
