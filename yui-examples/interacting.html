@@ -5,7 +5,7 @@
     <title>Flot Examples</title>
     <link href="layout.css" rel="stylesheet" type="text/css"></link>
     <!--[if IE]><script language="javascript" type="text/javascript" src="../excanvas.min.js"></script><![endif]-->
-    <script language="javascript" type="text/javascript" src="http://yui.yahooapis.com/combo?2.7.0/build/yahoo-dom-event/yahoo-dom-event.js&2.7.0/build/datasource/datasource.js"></script>
+    <script language="javascript" type="text/javascript" src="http://yui.yahooapis.com/combo?2.7.0/build/yahoo-dom-event/yahoo-dom-event.js&2.7.0/build/datasource/datasource-min.js&2.7.0/build/animation/animation-min.js"></script>
     <script language="javascript" type="text/javascript" src="../yui.flot.js"></script>
  </head>
     <body>
@@ -25,14 +25,14 @@
     <p><input id="enableTooltip" type="checkbox">Enable tooltip</p>
 
 <script id="source" language="javascript" type="text/javascript">
-$(function () {
+(function () {
     var sin = [], cos = [];
     for (var i = 0; i < 14; i += 0.5) {
         sin.push([i, Math.sin(i)]);
         cos.push([i, Math.cos(i)]);
     }
 
-    var plot = $.plot($("#placeholder"),
+    var plot = YAHOO.widget.Flot("placeholder",
            [ { data: sin, label: "sin(x)"}, { data: cos, label: "cos(x)" } ],
            { lines: { show: true },
              points: { show: true },
@@ -42,50 +42,66 @@ $(function () {
              });
 
     function showTooltip(x, y, contents) {
-        $('<div id="tooltip">' + contents + '</div>').css( {
-            position: 'absolute',
-            display: 'none',
-            top: y + 5,
-            left: x + 5,
-            border: '1px solid #fdd',
-            padding: '2px',
-            'background-color': '#fee',
-            opacity: 0.80
-        }).appendTo("body").fadeIn(200);
+	var div=document.getElementById('tooltip');
+	if(!div) {
+		div = document.createElement('div');
+		div.id="tooltip";
+		div.style.position="absolute";
+		div.style.border='1px solid #fdd';
+		div.style.padding='2px';
+		div.style.backgroundColor='#fee';
+		document.body.appendChild(div);
+	}
+	YAHOO.util.Dom.setStyle(div, 'opacity', 0);
+	div.innerHTML = contents;
+	div.style.top=(y + 5) + "px";
+	div.style.left=(x + 5) + "px";
+
+	var anim = new YAHOO.util.Anim(div, {opacity: {to: 0.8}}, 0.2);
+	anim.animate();
     }
 
     var previousPoint = null;
-    $("#placeholder").bind("plothover", function (event, pos, item) {
-        $("#x").text(pos.x.toFixed(2));
-        $("#y").text(pos.y.toFixed(2));
+    plot.subscribe("plothover", function (o) {
+	var pos = o.pos;
+	var item = o.item;
 
-        if ($("#enableTooltip:checked").length > 0) {
+	YAHOO.util.Dom.get("x").innerHTML = pos.x.toFixed(2);
+	YAHOO.util.Dom.get("y").innerHTML = pos.y.toFixed(2);
+
+	if (YAHOO.util.Dom.get("enableTooltip").checked) {
             if (item) {
                 if (previousPoint != item.datapoint) {
                     previousPoint = item.datapoint;
                     
-                    $("#tooltip").remove();
-                    var x = item.datapoint[0].toFixed(2),
-                        y = item.datapoint[1].toFixed(2);
+			var tooltip = YAHOO.util.Dom.get("tooltip");
+                    	if(tooltip) {
+				tooltip.parentNode.removeChild(tooltip);
+			}
+			var x = item.datapoint.x.toFixed(2),
+                        	y = item.datapoint.y.toFixed(2);
                     
-                    showTooltip(item.pageX, item.pageY,
-                                item.series.label + " of " + x + " = " + y);
+                    showTooltip(pos.pageX, pos.pageY, item.series.label + " of " + x + " = " + y);
                 }
             }
             else {
-                $("#tooltip").remove();
-                previousPoint = null;            
+		var tooltip = YAHOO.util.Dom.get("tooltip");
+		if(tooltip) {
+			tooltip.parentNode.removeChild(tooltip);
+		}
+                previousPoint = null;
             }
         }
     });
 
-    $("#placeholder").bind("plotclick", function (event, pos, item) {
+    plot.subscribe("plotclick", function (o) {
+	var item = o.item;
         if (item) {
-            $("#clickdata").text("You clicked point " + item.dataIndex + " in " + item.series.label + ".");
-            plot.highlight(item.series, item.datapoint);
+		YAHOO.util.Dom.get("clickdata").innerHTML = "You clicked point " + item.dataIndex + " in " + item.series.label + ".";
+            	plot.highlight(item.series, item.datapoint);
         }
     });
-});
+})();
 </script>
 
  </body>
