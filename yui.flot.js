@@ -292,8 +292,11 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 
 			for(var k=0; k<s.schema.length; k++) {
 				res[k] = L.merge(s, {data: []});
-				if(s.label && s.label[s.schema[k]]) {
+				if(s.label && L.isObject(s.label) && s.label[s.schema[k]]) {
 					res[k].label = s.label[s.schema[k]];
+				}
+				if(s.color && L.isObject(s.color) && s.color[s.schema[k]]) {
+					res[k].color = s.color[s.schema[k]];
 				}
 			}
 
