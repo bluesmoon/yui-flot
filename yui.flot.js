@@ -175,7 +175,6 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 
 		plot.createEvent('plotclick');
 		plot.createEvent('plothover');
-		plot.createEvent('plotselecting');
 		plot.createEvent('plotselected');
 		plot.createEvent('plotunselected');
 
@@ -2133,7 +2132,6 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 			else {
 				// this counts as a clear
 				plot.fireEvent("plotunselected", {});
-				plot.fireEvent("plotselecting", {});
 			}
 
 			E.removeListener(document, "mouseup", onSelectionMouseUp);
