@@ -68,7 +68,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 					labelWidth: null, // size of tick labels in pixels
 					labelHeight: null,
 
-					scaletype: 'linear',	// may be 'linear' or 'log'
+					scaleType: 'linear',	// may be 'linear' or 'log'
 
 					// mode specific options
 					tickDecimals: null, // no. of decimals, null means auto
@@ -610,8 +610,8 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 		}
 
 		function setRange(axis, axisOptions) {
-			var min = axisOptions.min != null ? (axisOptions.scaletype == 'log' ? Math.log(axisOptions.min<=0?1:axisOptions.min) * Math.LOG10E : axisOptions.min) : axis.datamin;
-			var max = axisOptions.max != null ? (axisOptions.scaletype == 'log' ? Math.log(axisOptions.max) * Math.LOG10E : axisOptions.max) : axis.datamax;
+			var min = axisOptions.min != null ? (axisOptions.scaleType == 'log' ? Math.log(axisOptions.min<=0?1:axisOptions.min) * Math.LOG10E : axisOptions.min) : axis.datamin;
+			var max = axisOptions.max != null ? (axisOptions.scaleType == 'log' ? Math.log(axisOptions.max) * Math.LOG10E : axisOptions.max) : axis.datamax;
 
 			if(axisOptions.mode === 'time') {
 				if(L.isObject(min) && min.getTime) min = min.getTime()/1000;
@@ -879,7 +879,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 						prev = v;
 						v = start + i * axis.tickSize;
 						var t=v;
-						if(axis.scaletype == 'log') {
+						if(axis.scaleType == 'log') {
 							t = Math.exp(t / Math.LOG10E);
 						}
 						ticks.push({ v: v, label: axis.tickFormatter(t, axis) });
@@ -893,7 +893,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 				};
 			}
 
-			axis.scaletype = axisOptions.scaletype;
+			axis.scaleType = axisOptions.scaleType;
 			axis.tickSize = unit ? [size, unit] : size;
 			axis.tickGenerator = generator;
 			if (L.isFunction(axisOptions.tickFormatter))
@@ -937,7 +937,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 					}
 					else
 						v = t;
-					if (axisOptions.scaletype == 'log') {
+					if (axisOptions.scaleType == 'log') {
 						if (label == null)
 							label = v;
 						v = Math.log(v) * Math.LOG10E;
@@ -1073,7 +1073,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 			from = ranges[axis].from;
 			to = ranges[axis].to;
 
-			if (options[axis].scaletype == 'log') {
+			if (options[axis].scaleType == 'log') {
 				if (from != null)
 					from = Math.log(from) * Math.LOG10E;
 				if (to != null)
