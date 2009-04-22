@@ -192,6 +192,8 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 
 			if (L.isArray(d)) {
 				d = { data: d };
+			} else {
+				d = L.merge(d);
 			}
 
 			if(d.disabled) {
@@ -203,6 +205,9 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 			}
 
 			var j, k;
+
+			// Make a copy so we don't obliterate the caller's data
+			var _data = [];
 
 			if (L.isArray(d.data[0])) {
 				for(j=0; j<d.data.length; j++) {
@@ -216,19 +221,26 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 						if(L.isObject(y) && y.getTime) y = y.getTime()/1000;
 						else y = parseFloat(y);
 
-						d.data[j] = { x: x, y: y};
+						_data.push({ x: x, y: y});
+					} else {
+						_data.push(d.data[j]);
 					}
 				}
 				d.control='x';
 				d.schema='y';
 			} else {
 				for(j=0; j<d.data.length; j++) {
+					_data.push({});
 					for(k in d.data[j]) {
-						if(L.isObject(d.data[j][k]) && d.data[j][k].getTime) d.data[j][k] = d.data[j][k].getTime()/1000;
-						else d.data[j][k] = parseFloat(d.data[j][k]);
+						if(L.isObject(d.data[j][k]) && d.data[j][k].getTime)
+							_data[j][k] = d.data[j][k].getTime()/1000;
+						else
+							_data[j][k] = parseFloat(d.data[j][k]);
 					}
 				}
 			}
+
+			d.data = _data;
 
 			if (!d.control) {
 				// try to guess the control field
