@@ -1,0 +1,270 @@
+\documentclass{beamer}
+
+\mode<presentation>
+{
+  \usetheme{Warsaw}
+
+  \setbeamercovered{transparent}
+
+}
+
+\beamertemplatenavigationsymbolsempty
+
+\setbeamercolor{title in head/foot}{bg=orange!90!black,fg=white}
+\setbeamercolor{subsection in head/foot}{bg=black!95,fg=white}
+\setbeamercolor{structure}{fg=black}
+
+\setbeamertemplate{blocks}[rounded][shadow=false]
+
+\setbeamertemplate{footline}%
+{%
+  \leavevmode%
+  \hbox{\begin{beamercolorbox}[wd=.5\paperwidth,ht=2.5ex,dp=1.125ex,leftskip=.3cm plus1fill,rightskip=.3cm]{author in head/foot}%
+    \usebeamerfont{author in head/foot}\insertdate%
+  \end{beamercolorbox}%
+  \begin{beamercolorbox}[wd=.5\paperwidth,ht=2.5ex,dp=1.125ex,leftskip=.3cm,rightskip=.3cm plus1fil]{title in head/foot}%
+    \usebeamerfont{title in head/foot}\insertshorttitle%
+  \end{beamercolorbox}}%
+  \vskip0pt%
+}%
+
+\usepackage[english]{babel}
+
+\usepackage[latin1]{inputenc}
+
+\usepackage{times}
+\usepackage[T1]{fontenc}
+
+\usepackage{ulem}
+
+\author{Philip Tellis / \texttt{philip@bluesmoon.info}}
+
+\title{Javascript charting with YUI-Flot}
+
+\date{\href{http://fosdem.org/2010/}{FOSDEM 2010} / 2010-02-07}
+
+
+\pgfdeclareimage[height=0.5cm]{bluesmoon-logo}{../ui/default/bodybg}
+\pgfdeclareimage[height=11pt]{cc-licence}{../by-nc-sa-3.0-88x31}
+\logo{\pgfuseimage{cc-licence}}
+
+
+
+
+
+\begin{document}
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+
+\section{Introduction}
+\subsection{Who, what, why?}
+
+\setbeamertemplate{background}{
+  \parbox[c][\paperheight]{\paperwidth}{
+    \hfill \pgfimage[height=\paperheight]{../bluesmoon}
+  }
+}
+\begin{frame}{\textit{\$ finger philip}}
+  \begin{itemize}
+  \item Philip Tellis
+  \item \small{\texttt{philip@bluesmoon.info}}
+  \item \href{http://bluesmoon.info/}{bluesmoon.info}
+  \item @bluesmoon
+  \item yahoo
+  \item geek
+  \end{itemize}
+\end{frame}
+\setbeamertemplate{background}{}
+
+\begin{frame}{What's this talk all about?}
+  \begin{itemize}
+  \item Charting options for web developers
+  \item Javascript charting with YUI-Flot
+  \item Things I learnt
+  \item How you can contribute
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Why do we need charting on the web?}
+  \begin{itemize}
+  \item There's so much data on the web
+  \item<2-> It's easy for users to access your data over the web
+  \item<3-> It's a little more portable than emailing Excel spreadsheets
+  \end{itemize}
+\end{frame}
+
+\subsection{Charting on the web}
+
+\begin{frame}{Alternatives for charting on the web}
+  \begin{itemize}
+  \item Static images generated on the server
+  \item Flash based dynamic charts with lots of interactivity
+  \item Javascript + Canvas based charts with some interactivity
+  \item Progressively enhanced CSS only charts
+  \item Non-semantic, HTML Table only charts (don't do this)
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Image based charts}
+  \begin{itemize}
+  \item Many charting libraries available
+  \item Works on all browsers (download the image from a text browser)
+  \item Static images can be downloaded and pasted into a report
+  \item Cannot interact with the data, or easily drill-down
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Flash based charts}
+  \begin{itemize}
+  \item Quite pretty and flashy
+  \item Works across most GUI based browsers (with a plugin)
+  \item Does not work on the iPhone
+  \item Grabs focus - still a problem on linux
+  \item Fast, but JS-Flash bridge is slow
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Javascript+Canvas based charts}
+  \begin{itemize}
+  \item Easy for any Javascript developer to hack
+  \item Based on Open standards
+  \item Does not natively work with Internet Explorer
+  \item Easy to integrate with other javascript libraries
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{CSS only charts}
+  \begin{itemize}
+  \item \href{http://icant.co.uk/csscharts/}{http://icant.co.uk/csscharts/}
+  \item Very simple code
+  \item Data needs to be encoded twice
+  \item Only vertical bar charts
+  \end{itemize}
+\end{frame}
+
+\subsection{YUI-Flot}
+
+\begin{frame}{What is flot?}
+  \begin{itemize}
+  \item A pure javascript charting library
+  \item Uses the HTML Canvas tag for drawing
+  \item Really smooth, and very pretty
+  \item Uses \texttt{excanvas} to work on IE
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Why I like it}
+  \begin{itemize}
+  \item Looks good -- very important based on your target audience
+  \item Good event model
+  \item Fast at drawing and redrawing
+  \item Ability to ``zoom in'' to sections of the data
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Why I ported it to YUI}
+  \begin{itemize}
+  \item My Javascript library of choice is YUI
+  \item My project required a charting widget
+  \item Flash based charts caused me problems on linux
+  \item Flot seems to have a good community around it
+  \item Most important -- I already knew and was using Javascript
+  \end{itemize}
+\end{frame}
+
+\section{YUI-Flot}
+\subsection{What can it do?}
+
+\setbeamertemplate{background}{
+  \parbox[c][\paperheight]{\paperwidth}{
+    \pgfimage[height=\paperheight]{./scatter} \hfill 
+  }
+}
+\setbeamertemplate{blocks}[shadow=false]
+\begin{frame}{Draw basic x/y scatter plots}
+  \begin{columns}[c]
+  \column{.5\textwidth}
+  \column{.5\textwidth}
+    \begin{block}{}
+      Random set of x,y points with no sequence \\
+      \texttt{[[10, 20], [15, 13], [8, 32], [12, 7], [17, 19], [23, 8], [3, 5]]} \\
+      \href{
+    \end{block}
+  \end{columns}
+\end{frame}
+\setbeamertemplate{background}{}
+
+\begin{frame}{Series plots}
+\end{frame}
+
+\begin{frame}{Multiple series}
+\end{frame}
+
+\subsection{How to use it?}
+% 1. Include code into your HTML
+% 2. Get your data from somewhere
+% 3. Instantiate the chart
+
+\subsection{Differences from Flot}
+% Based of flot 0.5, flot is now at 0.6
+% locale support for time series
+% timestamps are in seconds and not in milliseconds
+% More than two axes (scales) in each direction
+% Axis labels - different from tick labels
+% Log scale for all axes (also in Flot 0.6)
+% Full strftime based date formatter
+% Point dropping
+
+\section{Enlightenment}
+\subsection{Future}
+% Move up to flot 0.6
+% I like the plugin model in flot 0.6
+% Add error bars & candlesticks
+% Possibly add a smoothing plugin
+% Upgrade to YUI 3
+% Move it into the YUI gallery
+
+\subsection{Things I learnt}
+% Objects in javascript are passed in by reference
+% There's more to plotting a chart than just drawing lines
+% You can plot more than two dimensions on a 2d canvas
+% You can rotate HTML elements using CSS or SVG
+
+\subsection{How to contribute}
+% Fork the project on github
+% Sign the YUI CLA and get code back in
+
+\section{}
+\begin{frame}{\textit{Thanks, Merci, Bedankt, Danke Schön}}
+  \begin{itemize}
+  \item Jochen Maes \& Philip Paeps
+  \item Ole Laursen \& IOLA
+  \item Yahoo! Developer Network
+  \item The YUI team
+  \end{itemize}
+\end{frame}
+
+\setbeamertemplate{background}{
+  \parbox[c][\paperheight]{\paperwidth}{
+    \hfill \pgfimage[height=\paperheight]{../bluesmoon}
+  }
+}
+\begin{frame}{\textit{contact me}}
+  \begin{itemize}
+  \item Philip Tellis
+  \item \small{\texttt{philip@bluesmoon.info}}
+  \item \href{http://bluesmoon.info/}{bluesmoon.info}
+  \item @bluesmoon
+  \item yahoo
+  \item geek
+  \end{itemize}
+\end{frame}
+\setbeamertemplate{background}{}
+
+
+\end{document}
+
+
