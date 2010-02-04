@@ -231,22 +231,87 @@
     \end{block}
   \end{columns}
 \end{frame}
+
+\begin{frame}[fragile]{Multiple series}
+  \begin{block}{}
+    \begin{verbatim}
+      { x: 1, temp: 16, hg: 3, vol: 40 },
+      { x: 2, temp: 18, hg: 4, vol: 30 },
+      { x: 3, temp: 12, hg: 6, vol: 20 },
+      ...
+    \end{verbatim}
+  \end{block}
+\end{frame}
 \setbeamertemplate{background}{}
 
 \subsection{How to use it?}
-% 1. Include code into your HTML
-% 2. Get your data from somewhere
-% 3. Instantiate the chart
+\begin{frame}[fragile]{1. Include code into your HTML}
+\begin{block}{}
+\tiny{\begin{verbatim}
+<div id="placeholder"></div>
+
+
+<!--[if IE]><script type="text/javascript" src="excanvas.min.js"></script><![endif]-->
+<script type="text/javascript"
+        src="http://yui.yahooapis.com/combo
+                 ?2.7.0/build/yahoo-dom-event/yahoo-dom-event.js
+                 &2.7.0/build/datasource/datasource-min.js">
+</script>
+<script type="text/javascript" src="yui.flot.js"></script>
+\end{verbatim}}
+\end{block}
+\end{frame}
+
+\begin{frame}[fragile]{2. Get your data from somewhere}
+\begin{block}{}
+\tiny{\begin{verbatim}
+var data = [ [10, 20], [15, 5], [8, 32], [13, 97] ];
+\end{verbatim}}
+\end{block}
+\end{frame}
+
+\begin{frame}[fragile]{3. Set your chart's parameters}
+\begin{block}{}
+\tiny{\begin{verbatim}
+var data = [ [10, 20], [15, 5], [8, 32], [13, 97] ];
+
+var config = { lines: {show: true}, points: {show: true} };
+\end{verbatim}}
+\end{block}
+\end{frame}
+
+\begin{frame}[fragile]{4. Instantiate the chart}
+\begin{block}{}
+\tiny{\begin{verbatim}
+var data = [ [10, 20], [15, 5], [8, 32], [13, 97] ];
+
+var config = { lines: {show: true}, points: {show: true} };
+
+YAHOO.widget.Flot("placeholder", [data], config);
+\end{verbatim}}
+\end{block}
+\end{frame}
 
 \subsection{Differences from Flot}
-% Based of flot 0.5, flot is now at 0.6
-% locale support for time series
-% timestamps are in seconds and not in milliseconds
-% More than two axes (scales) in each direction
-% Axis labels - different from tick labels
-% Log scale for all axes (also in Flot 0.6)
-% Full strftime based date formatter
-% Point dropping
+
+\begin{frame}{Flot => YUI-Flot}
+\begin{itemize}
+\item Based of flot 0.5, flot is now at 0.6
+\item Added log scales for all axes (also in Flot 0.6)
+\item Allow more than two axes in each direction
+\item Add axis labels
+\item Drop points to make plot more readable
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Timeseries changes}
+\begin{itemize}
+\item Accepts Date objects as values for a timeseries
+\item timestamps are in seconds and not in milliseconds
+\item Full strftime based date formatter
+\item locale support for time series
+\end{itemize}
+\end{frame}
 
 \section{Enlightenment}
 \subsection{Future}

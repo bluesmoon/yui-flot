@@ -18,15 +18,21 @@
     var d = [];
 
     for(var i=0; i<30; i++) {
-	d.push( {
+	var data = {
 			x: i,
 			s1: Math.round(Math.random()*100),
 			s2: Math.round(Math.random()*25)+15,
 			s3: 0.4*(i-14.5)*(i-14.5),
-		});
+			s4: null
+		};
+	if(i%4) {
+		data.s4 = data.s3;
+		data.s3 = null;
+	}
+	d.push(data);
     }
 
-    YAHOO.widget.Flot("placeholder", [d]);
+    YAHOO.widget.Flot("placeholder", [d], {points: { show: true}, lines: {show: true}});
 
 })();
 </script>
