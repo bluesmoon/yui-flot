@@ -214,10 +214,24 @@
     \end{block}
   \end{columns}
 \end{frame}
-\setbeamertemplate{background}{}
 
+\setbeamertemplate{background}{
+  \parbox[c][\paperheight]{\paperwidth}{
+    \pgfimage[height=\paperheight]{./multiseries} \hfill 
+  }
+}
 \begin{frame}{Multiple series}
+  \begin{columns}[c]
+  \column{.3\textwidth}
+  \column{.7\textwidth}
+    \begin{block}{}
+      \small{3 series with a common X value} \\
+      \small{Schema style data structure -- out of a DB}
+      \href{http://bluesmoon.github.com/yui-flot/yui-examples/multiseries.html}{\small{yui-examples/multiseries.html}} \\
+    \end{block}
+  \end{columns}
 \end{frame}
+\setbeamertemplate{background}{}
 
 \subsection{How to use it?}
 % 1. Include code into your HTML
