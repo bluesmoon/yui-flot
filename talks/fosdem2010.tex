@@ -178,11 +178,30 @@
 \section{YUI-Flot}
 \subsection{What can it do?}
 
+\setbeamertemplate{background}{
+  \parbox[c][\paperheight]{\paperwidth}{
+    \pgfimage[height=\paperheight]{./scatter} \hfill 
+  }
+}
+\setbeamertemplate{blocks}[shadow=false]
 \begin{frame}{Draw basic x/y scatter plots}
+  \begin{columns}[c]
+  \column{.5\textwidth}
+  \column{.5\textwidth}
+    \begin{block}{}
+      Random set of x,y points with no sequence \\
+      \texttt{[[10, 20], [15, 13], [8, 32], [12, 7], [17, 19], [23, 8], [3, 5]]} \\
+      \href{
+    \end{block}
+  \end{columns}
+\end{frame}
+\setbeamertemplate{background}{}
+
+\begin{frame}{Series plots}
 \end{frame}
 
-% Series plots including time series
-% Series plots with multiple trend lines and a common X
+\begin{frame}{Multiple series}
+\end{frame}
 
 \subsection{How to use it?}
 % 1. Include code into your HTML
