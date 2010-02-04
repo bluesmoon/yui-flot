@@ -185,22 +185,36 @@
     \pgfimage[height=\paperheight]{./scatter} \hfill 
   }
 }
-\setbeamertemplate{blocks}[shadow=false]
 \begin{frame}{Draw basic x/y scatter plots}
   \begin{columns}[c]
-  \column{.5\textwidth}
-  \column{.5\textwidth}
+  \column{.6\textwidth}
     \begin{block}{}
-      Random set of x,y points with no sequence \\
-      \texttt{[[10, 20], [15, 13], [8, 32], [12, 7], [17, 19], [23, 8], [3, 5]]} \\
-      \href{http://bluesmoon.github.com/yui-flot/yui-examples/scatter.html}{yui-examples/scatter.html}
+      \small{Random set of x,y points} \\
+      \texttt{\tiny{[[10, 20], [15, 13], [8, 32], [12, 7], [17, 19], [23, 8], [3, 5]]}} \\
+      \href{http://bluesmoon.github.com/yui-flot/yui-examples/scatter.html}{\small{yui-examples/scatter.html}} \\
     \end{block}
+  \column{.4\textwidth}
+  \end{columns}
+\end{frame}
+
+\setbeamertemplate{background}{
+  \parbox[c][\paperheight]{\paperwidth}{
+    \pgfimage[height=\paperheight]{./timeseries} \hfill 
+  }
+}
+\begin{frame}{Series plots}
+  \begin{columns}[c]
+  \column{.6\textwidth}
+    \begin{block}{}
+      \small{X-axis contains Date objects or timestamps} \\
+      \small{Resolution is in seconds} \\
+      \small{strftime formatting} \\
+      \href{http://bluesmoon.github.com/yui-flot/yui-examples/timeseries.html}{\small{yui-examples/timeseries.html}} \\
+    \end{block}
+  \column{.4\textwidth}
   \end{columns}
 \end{frame}
 \setbeamertemplate{background}{}
-
-\begin{frame}{Series plots}
-\end{frame}
 
 \begin{frame}{Multiple series}
 \end{frame}

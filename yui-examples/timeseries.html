@@ -1,0 +1,33 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+ <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>Flot Examples</title>
+    <link href="layout.css" rel="stylesheet" type="text/css"></link>
+    <!--[if IE]><script language="javascript" type="text/javascript" src="../excanvas.min.js"></script><![endif]-->
+    <script language="javascript" type="text/javascript" src="http://yui.yahooapis.com/combo?2.7.0/build/yahoo-dom-event/yahoo-dom-event.js&2.7.0/build/datasource/datasource-min.js"></script>
+    <script language="javascript" type="text/javascript" src="../yui.flot.js"></script>
+ </head>
+    <body>
+    <h1>Flot Examples</h1>
+
+    <div id="placeholder" style="width:600px;height:300px;"></div>
+
+<script id="source" language="javascript" type="text/javascript">
+(function () {
+    var d = [];
+
+    var dt = new Date();
+    for(var i=0; i<30; i++) {
+    	var nd = new Date();
+    	nd.setDate(dt.getDate() + i);
+    	d.push([nd, Math.round(Math.random()*100)]);
+    }
+
+    YAHOO.widget.Flot("placeholder", [d], { xaxis: { mode: "time", timeformat: "%b-%d" } });	// ISO8601 Week-day of week
+
+})();
+</script>
+
+ </body>
+</html>
