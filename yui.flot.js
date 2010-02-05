@@ -619,6 +619,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 			setSpacing();
 			insertLabels();
 			insertLegend();
+			insertAxisLabels();
 		}
 
 		function setRange(axis, axisOptions) {
@@ -1270,6 +1271,34 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 
 			target.appendChild(DOM.createElementFromMarkup(html.join("")));
 		}
+
+		function insertAxisLabels() {
+			var xLocation, yLocation;
+			if( options.xaxis.label ) {
+				yLocation = plotOffset.top + plotHeight + ( axes.xaxis.labelHeight * 1.5 );
+				xLocation = plotOffset.left;
+				DOM.getElementsByClassName("xaxislabel", "div", target, DOM.removeElement);
+				target.appendChild(
+					DOM.createElementFromMarkup(
+						"<div class='xaxislabel' style='color:" + options.grid.color + ";width:" + plotWidth + "px;"
+							+ "text-align:center;position:absolute;top:" + yLocation + "px;left:" + xLocation + "px;'>"
+							+ options.xaxis.label + "</div>"
+					)
+				);
+			}
+			if( options.yaxis.label ) {
+				xLocation = plotOffset.left - ( axes.yaxis.labelWidth * 2 ) - options.grid.labelFontSize;
+				yLocation = plotOffset.top + plotHeight/2;
+				DOM.getElementsByClassName("yaxislabel", "div", target, DOM.removeElement);
+
+				target.appendChild(
+					DOM.createElementFromMarkup(
+						"<div class='yaxislabel' style='-moz-transform:rotate(270deg);-webkit-transform:rotate(270deg);writing-mode:tb-rl;filter:flipV flipH;color:" + options.grid.color + ";"
+							+ "text-align:center;position:absolute;top:" + yLocation + "px;left:" + xLocation + "px;'>"
+							+ options.yaxis.label + "</div>")
+				);
+			}
+	        }
 
 		function drawSeries(series) {
 			if (series.lines.show)
