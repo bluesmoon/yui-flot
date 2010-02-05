@@ -187,13 +187,16 @@
 }
 \begin{frame}{Draw basic x/y scatter plots}
   \begin{columns}[c]
-  \column{.6\textwidth}
-    \begin{block}{}
-      \small{Random set of x,y points} \\
-      \texttt{\tiny{[[10, 20], [15, 13], [8, 32], [12, 7], [17, 19], [23, 8], [3, 5]]}} \\
-      \href{http://bluesmoon.github.com/yui-flot/yui-examples/scatter.html}{\small{yui-examples/scatter.html}} \\
-    \end{block}
+  \column{.1\textwidth}
   \column{.4\textwidth}
+    \begin{block}{}
+      \small{
+      Random set of x,y points \\
+      \texttt{\tiny{[[10, 20], [15, 13], [8, 32], [12, 7], [17, 19], [23, 8], [3, 5]]} \\
+      \href{http://bluesmoon.github.com/yui-flot/yui-examples/scatter.html}{yui-examples/scatter.html}}
+      }
+    \end{block}
+  \column{.5\textwidth}
   \end{columns}
 \end{frame}
 
@@ -204,14 +207,17 @@
 }
 \begin{frame}{Series plots}
   \begin{columns}[c]
-  \column{.3\textwidth}
-  \column{.7\textwidth}
+  \column{.2\textwidth}
+  \column{.6\textwidth}
     \begin{block}{}
-      \small{X-axis contains Date objects or timestamps} \\
-      \small{Resolution is in seconds} \\
-      \small{strftime formatting} \\
-      \href{http://bluesmoon.github.com/yui-flot/yui-examples/timeseries.html}{\small{yui-examples/timeseries.html}} \\
+      \small{
+      X-axis contains Date objects or timestamps \\
+      Resolution is in seconds \\
+      strftime formatting \\
+      \href{http://bluesmoon.github.com/yui-flot/yui-examples/timeseries.html}{\texttt{yui-examples/timeseries.html}}
+      }
     \end{block}
+  \column{.2\textwidth}
   \end{columns}
 \end{frame}
 
@@ -340,31 +346,34 @@ YAHOO.widget.Flot("placeholder", [data], config);
 \begin{frame}[fragile]{Javascript objects are passed by reference}
   \begin{columns}[c]
   \column{.5\textwidth}
-    \begin{block}{Bad}
+    \begin{block}{\textcolor{red}{Bad}}
+      \small{
       \begin{verbatim}
-function normalizeData(d) {
+function fixData(d) {
    var i, l=d.length;
+
    for(i=0; i<l; i++) {
-      d[i] = normalize(d[i]);
+      d[i] = fix(d[i]);
    }
 
    return d;
 }
-      \end{verbatim}
+      \end{verbatim}}
     \end{block}
   \column{.5\textwidth}
-    \begin{block}{Good}
+    \begin{block}{\textcolor{green}{Good}}
+      \small{
       \begin{verbatim}
-function normalizeData(d) {
+function fixData(d) {
    var i, l=d.length;
-   var d_copy=[];
+   var d_c=[];
    for(i=0; i<l; i++) {
-      d_copy[i] = normalize(d[i]);
+      d_c[i] = fix(d[i]);
    }
 
-   return d_copy;
+   return d_c;
 }
-      \end{verbatim}
+      \end{verbatim}}
     \end{block}
   \end{columns}
 \end{frame}
@@ -379,38 +388,42 @@ function normalizeData(d) {
 \end{frame}
 
 \begin{frame}[fragile]{You can rotate HTML elements using CSS or SVG}
-  \begin{verbatim}
+  \begin{block}{}
+  \tiny{\begin{verbatim}
   DIV.vertical {
-     -moz-transform:rotate(270deg);	/* Gecko */
+     -moz-transform:rotate(270deg);       /* Gecko */
 
-     -webkit-transform:rotate(270deg);	/* Webkit */
+     -webkit-transform:rotate(270deg);    /* Webkit */
 
-     writing-mode:tb-rl;		/* IE */
+     writing-mode:tb-rl;                  /* IE */
      filter:flipV flipH;
 
      /* alternate for IE */
      filter:progid:DXImageTransform.Microsoft.BasicImage(rotation=3);
   }
-  \end{verbatim}
+  \end{verbatim}}
+  \end{block}
 \end{frame}
 
 \subsection{How to contribute}
 
 \begin{frame}{Fork the project on github}
-  \begin{block}{}
-    \pgfimage{yui-flot-github}
-  \end{block}
   \begin{itemize}
   \item Fork the project on github
   \item Make your own changes (BSD Licensed)
   \item Tell me about them through a pull request
   \item This code is available to everyone
   \end{itemize}
+  \begin{block}{}
+  \begin{center}
+    \pgfimage[height=.3\paperheight]{yui-flot-github}
+  \end{center}
+  \end{block}
 \end{frame}
 
 \begin{frame}{Sign the YUI CLA}
   \begin{itemize}
-  \item YUI CLA says that you can legally commit anything you commit
+  \item YUI CLA: You're commiting legal code \\ \footnotesize{ie: You own the code, you haven't stolen it, etc.}
   \item This code can also get into the YUI gallery
   \item Available for use through the Yahoo! CDN
   \end{itemize}
