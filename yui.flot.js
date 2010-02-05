@@ -270,7 +270,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 		function markDroppedPoints(s) {
 			var l=s.data.length;
 
-			if(l <= canvasWidth/10) {	// at least 10px per point
+			if(l <= canvasWidth/10 || options.dontDropPoints) {	// at least 10px per point
 				return s;
 			}
 
