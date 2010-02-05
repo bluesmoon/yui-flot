@@ -301,6 +301,7 @@ YAHOO.widget.Flot("placeholder", [data], config);
 \item Allow more than two axes in each direction
 \item Add axis labels
 \item Drop points to make plot more readable
+\item Use tabs instead of spaces for indentation
 \end{itemize}
 \end{frame}
 
@@ -368,13 +369,52 @@ function normalizeData(d) {
   \end{columns}
 \end{frame}
 
-% There's more to plotting a chart than just drawing lines
-% You can plot more than two dimensions on a 2d canvas
-% You can rotate HTML elements using CSS or SVG
+\begin{frame}{There's more to charts than drawing lines}
+  \begin{itemize}
+  \item Understanding statistics helps
+  \item Different visualisations for different types of data \\ \href{http://www.perceptualedge.com/articles/Whitepapers/Communicating\_Numbers.pdf}{\tiny{http://www.perceptualedge.com/articles/Whitepapers/Communicating\_Numbers.pdf}}
+  \item Charts need to summarise data visually
+  \item You can plot more than two dimensions on a 2d canvas \\ \tiny{eg: Dot pitch in a scatter plot or error bars}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{You can rotate HTML elements using CSS or SVG}
+  \begin{verbatim}
+  DIV.vertical {
+     -moz-transform:rotate(270deg);	/* Gecko */
+
+     -webkit-transform:rotate(270deg);	/* Webkit */
+
+     writing-mode:tb-rl;		/* IE */
+     filter:flipV flipH;
+
+     /* alternate for IE */
+     filter:progid:DXImageTransform.Microsoft.BasicImage(rotation=3);
+  }
+  \end{verbatim}
+\end{frame}
 
 \subsection{How to contribute}
-% Fork the project on github
-% Sign the YUI CLA and get code back in
+
+\begin{frame}{Fork the project on github}
+  \begin{block}{}
+    \pgfimage{yui-flot-github}
+  \end{block}
+  \begin{itemize}
+  \item Fork the project on github
+  \item Make your own changes (BSD Licensed)
+  \item Tell me about them through a pull request
+  \item This code is available to everyone
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Sign the YUI CLA}
+  \begin{itemize}
+  \item YUI CLA says that you can legally commit anything you commit
+  \item This code can also get into the YUI gallery
+  \item Available for use through the Yahoo! CDN
+  \end{itemize}
+\end{frame}
 
 \section{}
 \begin{frame}{\textit{Thanks, Merci, Bedankt, Danke Sch\"on}}
