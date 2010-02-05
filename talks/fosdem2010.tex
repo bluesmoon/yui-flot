@@ -315,15 +315,59 @@ YAHOO.widget.Flot("placeholder", [data], config);
 
 \section{Enlightenment}
 \subsection{Future}
-% Move up to flot 0.6
-% I like the plugin model in flot 0.6
-% Add error bars & candlesticks
-% Possibly add a smoothing plugin
-% Upgrade to YUI 3
-% Move it into the YUI gallery
+
+\begin{frame}{Move up to flot 0.6}
+  \begin{itemize}
+  \item I like the plugin model in flot 0.6
+  \item The thresholds feature is great
+  \item Stacked bars are useful
+  \item Stepped line charts are useful
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{More additions}
+  \begin{itemize}
+  \item Add error bars \& candlesticks
+  \item Pie charts
+  \item Add a smoothing plugin (local regression)
+  \item Upgrade to YUI 3
+  \item Move it into the YUI gallery
+  \end{itemize}
+\end{frame}
 
 \subsection{Things I learnt}
-% Objects in javascript are passed in by reference
+\begin{frame}[fragile]{Javascript objects are passed by reference}
+  \begin{columns}[c]
+  \column{.5\textwidth}
+    \begin{block}{Bad}
+      \begin{verbatim}
+function normalizeData(d) {
+   var i, l=d.length;
+   for(i=0; i<l; i++) {
+      d[i] = normalize(d[i]);
+   }
+
+   return d;
+}
+      \end{verbatim}
+    \end{block}
+  \column{.5\textwidth}
+    \begin{block}{Good}
+      \begin{verbatim}
+function normalizeData(d) {
+   var i, l=d.length;
+   var d_copy=[];
+   for(i=0; i<l; i++) {
+      d_copy[i] = normalize(d[i]);
+   }
+
+   return d_copy;
+}
+      \end{verbatim}
+    \end{block}
+  \end{columns}
+\end{frame}
+
 % There's more to plotting a chart than just drawing lines
 % You can plot more than two dimensions on a 2d canvas
 % You can rotate HTML elements using CSS or SVG
