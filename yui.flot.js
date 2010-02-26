@@ -1408,8 +1408,14 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 						continue;
 					}
 
-					if (prev == null || cur == null)
+					if (prev == null || cur == null) {
+						if(areaOpen) {
+							ctx.lineTo(axisx.p2c(lastX), axisy.p2c(bottom));
+							ctx.fill();
+						}
+						areaOpen = false;
 						continue;
+					}
 
 					var x1 = prev.x, y1 = prev.y,
 						x2 = cur.x, y2 = cur.y;
