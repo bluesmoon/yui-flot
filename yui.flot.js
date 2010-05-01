@@ -111,6 +111,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 					align: "left" // or "center" 
 				},
 				grid: {
+					show: true,
 					showLines: true,
 					color: "#545454", // primary color used for outline and labels
 					backgroundColor: null, // null for transparent, else color
@@ -617,7 +618,8 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 				setupAxis(axes[axis], options[axis], axis.charAt(0));
 
 			setSpacing();
-			insertLabels();
+			if(options.grid.show)
+			  insertLabels();
 			insertLegend();
 			insertAxisLabels();
 		}
@@ -973,70 +975,81 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 
 		function setSpacing() {
 			function measureXLabels(axis) {
-				// to avoid measuring the widths of the labels, we
-				// construct fixed-size boxes and put the labels inside
-				// them, we don't need the exact figures and the
-				// fixed-size box content is easy to center
-				if (axis.labelWidth == null)
-					axis.labelWidth = canvasWidth / 6;
+  			if(options.grid.show){
+  				// to avoid measuring the widths of the labels, we
+  				// construct fixed-size boxes and put the labels inside
+  				// them, we don't need the exact figures and the
+  				// fixed-size box content is easy to center
+  				if (axis.labelWidth == null)
+  					axis.labelWidth = canvasWidth / 6;
 
-				// measure x label heights
-				if (axis.labelHeight == null) {
-					labels = [];
-					for (i = 0; i < axis.ticks.length; ++i) {
-						l = axis.ticks[i].label;
-						if (l)
-							labels.push('<div class="tickLabel" style="float:left;width:' + axis.labelWidth + 'px">' + l + '</div>');
-					}
+  				// measure x label heights
+  				if (axis.labelHeight == null) {
+  					labels = [];
+  					for (i = 0; i < axis.ticks.length; ++i) {
+  						l = axis.ticks[i].label;
+  						if (l)
+  							labels.push('<div class="tickLabel" style="float:left;width:' + axis.labelWidth + 'px">' + l + '</div>');
+  					}
 
-					axis.labelHeight = 0;
-					if (labels.length > 0) {
-						var dummyDiv = target.appendChild(DOM.createElementFromMarkup('<div style="position:absolute;top:-10000px;width:10000px;font-size:smaller">'
-										 + labels.join("") + '<div style="clear:left"></div></div>'));
-						axis.labelHeight = dummyDiv.offsetHeight;
-						target.removeChild(dummyDiv);
-					}
-				}
+  					axis.labelHeight = 0;
+  					if (labels.length > 0) {
+  						var dummyDiv = target.appendChild(DOM.createElementFromMarkup('<div style="position:absolute;top:-10000px;width:10000px;font-size:smaller">'
+  										 + labels.join("") + '<div style="clear:left"></div></div>'));
+  						axis.labelHeight = dummyDiv.offsetHeight;
+  						target.removeChild(dummyDiv);
+  					}
+  				}
+			  }
+			  else{
+				  axis.labelHeight = 0;
+				  axis.labelWidth = 0;
+			  }
 			}
 
 			function measureYLabels(axis) {
-				if (axis.labelWidth == null || axis.labelHeight == null) {
-					var i, labels = [], l;
-					// calculate y label dimensions
-					for (i = 0; i < axis.ticks.length; ++i) {
-						l = axis.ticks[i].label;
-						if (l)
-							labels.push('<div class="tickLabel">' + l + '</div>');
-					}
+  			if(options.grid.show){
+  				if (axis.labelWidth == null || axis.labelHeight == null) {
+  					var i, labels = [], l;
+  					// calculate y label dimensions
+  					for (i = 0; i < axis.ticks.length; ++i) {
+  						l = axis.ticks[i].label;
+  						if (l)
+  							labels.push('<div class="tickLabel">' + l + '</div>');
+  					}
 
-					if (labels.length > 0) {
-						var dummyDiv = target.appendChild(DOM.createElementFromMarkup('<div style="position:absolute;top:-10000px;font-size:smaller">'
-										 + labels.join("") + '</div>'));
-						if (axis.labelWidth == null)
-							axis.labelWidth = dummyDiv.offsetWidth;
-						if (axis.labelHeight == null)
-							axis.labelHeight = dummyDiv.firstChild.offsetHeight;
-						target.removeChild(dummyDiv);
-					}
+  					if (labels.length > 0) {
+  						var dummyDiv = target.appendChild(DOM.createElementFromMarkup('<div style="position:absolute;top:-10000px;font-size:smaller">'
+  										 + labels.join("") + '</div>'));
+  						if (axis.labelWidth == null)
+  							axis.labelWidth = dummyDiv.offsetWidth;
+  						if (axis.labelHeight == null)
+  							axis.labelHeight = dummyDiv.firstChild.offsetHeight;
+  						target.removeChild(dummyDiv);
+  					}
 
-					if (axis.labelWidth == null)
-						axis.labelWidth = 0;
-					if (axis.labelHeight == null)
-						axis.labelHeight = 0;
-				}
+  					if (axis.labelWidth == null)
+  						axis.labelWidth = 0;
+  					if (axis.labelHeight == null)
+  						axis.labelHeight = 0;
+  				}
+  		  }
+			  else{
+				  axis.labelHeight = 0;
+				  axis.labelWidth = 0;
+			  }
 			}
 
 			measureXLabels(axes.xaxis);
 			measureYLabels(axes.yaxis);
 			measureXLabels(axes.x2axis);
 			measureYLabels(axes.y2axis);
-
 			// get the most space needed around the grid for things
 			// that may stick out
-			var maxOutset = options.grid.borderWidth;
+			var maxOutset = (options.grid.show) ? options.grid.borderWidth : 0;
 			for (i = 0; i < series.length; ++i)
-				maxOutset = Math.max(maxOutset, 2 * (series[i].points.radius + series[i].points.lineWidth/2));
-
+				maxOutset = (Math.max(maxOutset, 2 * (((series[i].points.show) ? series[i].points.radius : 0 ) + series[i].points.lineWidth/2)));
+      
 			plotOffset.left = plotOffset.right = plotOffset.top = plotOffset.bottom = maxOutset;
 
 			var margin = options.grid.labelMargin + options.grid.borderWidth;
@@ -1174,7 +1187,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 				}
 			}
 
-			if(options.grid.showLines) {
+			if(options.grid.show && options.grid.showLines) {
 				// draw the inner grid
 				ctx.lineWidth = 1;
 				ctx.strokeStyle = options.grid.tickColor;
@@ -1222,7 +1235,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 				ctx.stroke();
 			}
 
-			if (options.grid.borderWidth) {
+			if (options.grid.show && options.grid.borderWidth) {
 				// draw border
 				var bw = options.grid.borderWidth;
 				ctx.lineWidth = bw;
