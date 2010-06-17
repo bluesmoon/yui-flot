@@ -338,7 +338,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 
 			// First we normalise the data into a standard format
 			var res = [];
-			for (i = 0; i < d.length; ++i) {
+			for (var i = 0; i < d.length; ++i) {
 				s = normalizeData(d[i]);
 				if(typeof s === 'undefined') 
 					continue;
@@ -383,7 +383,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 			var neededColors = series.length,
 				usedColors = [],
 				assignedColors = [];
-			for (i = 0; i < series.length; ++i) {
+			for (var i = 0; i < series.length; ++i) {
 				var sc = series[i].color;
 				if (sc != null) {
 					--neededColors;
@@ -396,7 +396,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 
 			// we might need to generate more colors if higher indices
 			// are assigned
-			for (i = 0; i < assignedColors.length; ++i) {
+			for (var i = 0; i < assignedColors.length; ++i) {
 				neededColors = Math.max(neededColors, assignedColors[i] + 1);
 			}
 
@@ -428,7 +428,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 
 			// fill in the options
 			var colori = 0, s;
-			for (i = 0; i < series.length; ++i) {
+			for (var i = 0; i < series.length; ++i) {
 				s = series[i];
 
 				// assign colors
@@ -724,7 +724,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 						minSize = axisOptions.minTickSize[0] * timeUnitSize[axisOptions.minTickSize[1]];
 				}
 
-				for (i = 0; i < spec.length - 1; ++i)
+				for (var i = 0; i < spec.length - 1; ++i)
 					if (delta < (spec[i][0] * timeUnitSize[spec[i][1]]
 								 + spec[i + 1][0] * timeUnitSize[spec[i + 1][1]]) / 2
 					   && spec[i][0] * timeUnitSize[spec[i][1]] >= minSize)
@@ -828,7 +828,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 					span*=1000;
 
 					if (t < timeUnitSize.minute)
-						fmt = "%k:%M:%S";
+						var fmt = "%k:%M:%S";
 					else if (t < timeUnitSize.day) {
 						if (span < 2 * timeUnitSize.day)
 							fmt = "%k:%M";
@@ -942,7 +942,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 
 				// clean up the user-supplied ticks, copy them over
 				var i, v;
-				for (i = 0; i < ticks.length; ++i) {
+				for (var i = 0; i < ticks.length; ++i) {
 					var label = null;
 					var t = ticks[i];
 					if (typeof t == "object") {
@@ -985,9 +985,9 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 
   				// measure x label heights
   				if (axis.labelHeight == null) {
-  					labels = [];
-  					for (i = 0; i < axis.ticks.length; ++i) {
-  						l = axis.ticks[i].label;
+  					var labels = [];
+  					for (var i = 0; i < axis.ticks.length; ++i) {
+  						var l = axis.ticks[i].label;
   						if (l)
   							labels.push('<div class="tickLabel" style="float:left;width:' + axis.labelWidth + 'px">' + l + '</div>');
   					}
@@ -1012,7 +1012,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
   				if (axis.labelWidth == null || axis.labelHeight == null) {
   					var i, labels = [], l;
   					// calculate y label dimensions
-  					for (i = 0; i < axis.ticks.length; ++i) {
+  					for (var i = 0; i < axis.ticks.length; ++i) {
   						l = axis.ticks[i].label;
   						if (l)
   							labels.push('<div class="tickLabel">' + l + '</div>');
@@ -1047,7 +1047,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 			// get the most space needed around the grid for things
 			// that may stick out
 			var maxOutset = (options.grid.show) ? options.grid.borderWidth : 0;
-			for (i = 0; i < series.length; ++i)
+			for (var i = 0; i < series.length; ++i)
 				maxOutset = (Math.max(maxOutset, 2 * (((series[i].points.show) ? series[i].points.radius : 0 ) + series[i].points.lineWidth/2)));
       
 			plotOffset.left = plotOffset.right = plotOffset.top = plotOffset.bottom = maxOutset;
@@ -1134,7 +1134,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 				if (L.isFunction(markings))
 					markings = markings({ xaxis: axes.xaxis, yaxis: axes.yaxis, x2axis: axes.x2axis, y2axis: axes.y2axis });
 
-				for (i = 0; i < markings.length; ++i) {
+				for (var i = 0; i < markings.length; ++i) {
 					var m = markings[i],
 						xrange = extractRange(m, "x"),
 						yrange = extractRange(m, "y");
@@ -1193,7 +1193,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 				ctx.strokeStyle = options.grid.tickColor;
 				ctx.beginPath();
 				var v, axis = axes.xaxis;
-				for (i = 0; i < axis.ticks.length; ++i) {
+				for (var i = 0; i < axis.ticks.length; ++i) {
 					v = axis.ticks[i].v;
 					if (v <= axis.min || v >= axes.xaxis.max)
 						continue;   // skip those lying on the axes
@@ -1203,7 +1203,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 				}
 	
 				axis = axes.yaxis;
-				for (i = 0; i < axis.ticks.length; ++i) {
+				for (var i = 0; i < axis.ticks.length; ++i) {
 					v = axis.ticks[i].v;
 					if (v <= axis.min || v >= axis.max)
 						continue;
@@ -1213,7 +1213,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 				}
 	
 				axis = axes.x2axis;
-				for (i = 0; i < axis.ticks.length; ++i) {
+				for (var i = 0; i < axis.ticks.length; ++i) {
 					v = axis.ticks[i].v;
 					if (v <= axis.min || v >= axis.max)
 						continue;
@@ -1223,7 +1223,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 				}
 	
 				axis = axes.y2axis;
-				for (i = 0; i < axis.ticks.length; ++i) {
+				for (var i = 0; i < axis.ticks.length; ++i) {
 					v = axis.ticks[i].v;
 					if (v <= axis.min || v >= axis.max)
 						continue;
@@ -1754,7 +1754,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 
 			var fragments = [], rowStarted = false,
 				lf = options.legend.labelFormatter, s, label;
-			for (i = 0; i < series.length; ++i) {
+			for (var i = 0; i < series.length; ++i) {
 				s = series[i];
 				label = s.label;
 				if (!label)
@@ -2021,7 +2021,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 			octx.translate(plotOffset.left, plotOffset.top);
 
 			var i, hi;
-			for (i = 0; i < highlights.length; ++i) {
+			for (var i = 0; i < highlights.length; ++i) {
 				hi = highlights[i];
 
 				if (hi.series.bars.show)
