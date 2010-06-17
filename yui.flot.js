@@ -328,16 +328,14 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 
 		function parseData(d) {
 			if(d.length === 0) {
-				return;
+				return null;
 			}
-
-			var i, s;
-
+			
 			// get the canvas width so we know if we have to drop points
 			canvasWidth = parseInt(DOM.getStyle(target, 'width'), 10);
 
 			// First we normalise the data into a standard format
-			var res = [];
+			var s, res = [];
 			for (var i = 0; i < d.length; ++i) {
 				s = normalizeData(d[i]);
 				if(typeof s === 'undefined') 
@@ -361,7 +359,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 
 		function parseOptions(o) {
 			if (options.grid.borderColor == null)
-				options.grid.borderColor = options.grid.color
+				options.grid.borderColor = options.grid.color;
 
 			if(typeof o === 'undefined') {
 				return;
@@ -383,7 +381,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 			var neededColors = series.length,
 				usedColors = [],
 				assignedColors = [];
-			for (var i = 0; i < series.length; ++i) {
+			for (i = 0; i < series.length; ++i) {
 				var sc = series[i].color;
 				if (sc != null) {
 					--neededColors;
@@ -396,7 +394,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 
 			// we might need to generate more colors if higher indices
 			// are assigned
-			for (var i = 0; i < assignedColors.length; ++i) {
+			for (i = 0; i < assignedColors.length; ++i) {
 				neededColors = Math.max(neededColors, assignedColors[i] + 1);
 			}
 
@@ -428,7 +426,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 
 			// fill in the options
 			var colori = 0, s;
-			for (var i = 0; i < series.length; ++i) {
+			for (i = 0; i < series.length; ++i) {
 				s = series[i];
 
 				// assign colors
@@ -503,7 +501,8 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 					if(data[j] === null)
 						continue;
 
-					var x = p.x, y = p.y;
+					x = p.x;
+					y = p.y;
 
 					if(L.isObject(x) && x.getTime) {	// this is a Date object
 						x = x.getTime()/1000;
@@ -518,7 +517,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 						if (x < xmin)
 							xmin = x;
 						if (x > xmax)
-							xmax = x
+							xmax = x;
 					}
 					else
 						x = null;
@@ -683,7 +682,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 				noTicks = canvasHeight / 60;
 
 			var delta = (axis.max - axis.min) / noTicks;
-			var size, generator, unit, formatter, i, magn, norm;
+			var size, generator, unit, formatter, magn, norm;
 
 			if (axisOptions.mode == "time") {
 				// pretty handling of time
@@ -941,7 +940,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 					ticks = ticks({ min: axis.min, max: axis.max });
 
 				// clean up the user-supplied ticks, copy them over
-				var i, v;
+				var v;
 				for (var i = 0; i < ticks.length; ++i) {
 					var label = null;
 					var t = ticks[i];
@@ -1010,7 +1009,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 			function measureYLabels(axis) {
   			if(options.grid.show){
   				if (axis.labelWidth == null || axis.labelHeight == null) {
-  					var i, labels = [], l;
+  					var labels = [], l;
   					// calculate y label dimensions
   					for (var i = 0; i < axis.ticks.length; ++i) {
   						l = axis.ticks[i].label;
@@ -1134,7 +1133,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 				if (L.isFunction(markings))
 					markings = markings({ xaxis: axes.xaxis, yaxis: axes.yaxis, x2axis: axes.x2axis, y2axis: axes.y2axis });
 
-				for (var i = 0; i < markings.length; ++i) {
+				for (i = 0; i < markings.length; ++i) {
 					var m = markings[i],
 						xrange = extractRange(m, "x"),
 						yrange = extractRange(m, "y");
@@ -1193,7 +1192,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 				ctx.strokeStyle = options.grid.tickColor;
 				ctx.beginPath();
 				var v, axis = axes.xaxis;
-				for (var i = 0; i < axis.ticks.length; ++i) {
+				for (i = 0; i < axis.ticks.length; ++i) {
 					v = axis.ticks[i].v;
 					if (v <= axis.min || v >= axes.xaxis.max)
 						continue;   // skip those lying on the axes
@@ -1203,7 +1202,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 				}
 	
 				axis = axes.yaxis;
-				for (var i = 0; i < axis.ticks.length; ++i) {
+				for (i = 0; i < axis.ticks.length; ++i) {
 					v = axis.ticks[i].v;
 					if (v <= axis.min || v >= axis.max)
 						continue;
@@ -1213,7 +1212,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 				}
 	
 				axis = axes.x2axis;
-				for (var i = 0; i < axis.ticks.length; ++i) {
+				for (i = 0; i < axis.ticks.length; ++i) {
 					v = axis.ticks[i].v;
 					if (v <= axis.min || v >= axis.max)
 						continue;
@@ -1223,7 +1222,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 				}
 	
 				axis = axes.y2axis;
-				for (var i = 0; i < axis.ticks.length; ++i) {
+				for (i = 0; i < axis.ticks.length; ++i) {
 					v = axis.ticks[i].v;
 					if (v <= axis.min || v >= axis.max)
 						continue;
@@ -1840,7 +1839,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 		function findNearbyItem(mouseX, mouseY) {
 			var maxDistance = options.grid.mouseActiveRadius,
 				lowestDistance = maxDistance * maxDistance + 1,
-				item = null, foundPoint = false, i, j;
+				item = null, foundPoint = false, j, x, y;
 
 			function result(i, j) {
 				return {
@@ -1867,7 +1866,8 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 						if (data[j] == null)
 							continue;
 
-						var x = data[j].x, y = data[j].y;
+						x = data[j].x;
+						y = data[j].y;
 
 						// For points and lines, the cursor must be within a
 						// certain distance to the data point
@@ -1892,7 +1892,8 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 						barRight = barLeft + s.bars.barWidth;
 
 					for (j = 0; j < data.length; j++) {
-						var x = data[j].x, y = data[j].y;
+						x = data[j].x;
+						y = data[j].y;
 						if (x == null)
 							continue;
   
@@ -1987,8 +1988,8 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 
 			if (item) {
 				// fill in mouse pos for any listeners out there
-				item.pageX = parseInt(item.series.xaxis.p2c(item.datapoint.x) + offset[0] + plotOffset.left);
-				item.pageY = parseInt(item.series.yaxis.p2c(item.datapoint.y) + offset[1] + plotOffset.top);
+				item.pageX = parseInt(item.series.xaxis.p2c(item.datapoint.x) + offset[0] + plotOffset.left, 10);
+				item.pageY = parseInt(item.series.yaxis.p2c(item.datapoint.y) + offset[1] + plotOffset.top, 10);
 			}
 
 			if (options.grid.autoHighlight) {
@@ -2020,7 +2021,7 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 			octx.clearRect(0, 0, canvasWidth, canvasHeight);
 			octx.translate(plotOffset.left, plotOffset.top);
 
-			var i, hi;
+			var hi;
 			for (var i = 0; i < highlights.length; ++i) {
 				hi = highlights[i];
 
@@ -2363,9 +2364,9 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 		};
 
 		this.normalize = function() {
-			this.r = clamp(0, parseInt(this.r), 255);
-			this.g = clamp(0, parseInt(this.g), 255);
-			this.b = clamp(0, parseInt(this.b), 255);
+			this.r = clamp(0, parseInt(this.r, 10), 255);
+			this.g = clamp(0, parseInt(this.g, 10), 255);
+			this.b = clamp(0, parseInt(this.b, 10), 255);
 			this.a = clamp(0, this.a, 1);
 			return this;
 		};
