@@ -568,6 +568,10 @@ Datasource is optional, you only need it if one of your axes has its mode set to
 			if (canvasWidth <= 0 || canvasHeight <= 0)
 				throw "Invalid dimensions for plot, width = " + canvasWidth + ", height = " + canvasHeight;
 
+			if (YAHOO.env.ua.ie) {
+				G_vmlCanvasManager.init_(document);
+			}
+
 			// the canvas
 			canvas = makeCanvas(canvasWidth, canvasHeight, target);
 			ctx = canvas.getContext("2d");
