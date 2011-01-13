@@ -1,0 +1,7 @@
+This is a port of the flot charting library to YUI.
+
+Note that as of version 3.3.0, YUI has its own Canvas/SVG/VML based charting library.
+I will most likely not do any more work on yui-flot, but instead try and figure out
+a migration path from yui-flot to yui-3.
+
+See http://developer.yahoo.com/yui/3/charts/ for YUI3's charts.
